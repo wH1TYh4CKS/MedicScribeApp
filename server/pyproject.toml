@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "medicscribe-server"
+version = "0.0.1"
+description = "MedicScribe — clinic-local FastAPI backend (streaming ASR + structured medical notes)"
+requires-python = ">=3.11,<3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "MedicScribe" }]
+dependencies = [
+    "fastapi~=0.115",
+    "uvicorn[standard]~=0.32",
+    "pydantic~=2.9",
+    "pydantic-settings~=2.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest~=8.0",
+    "httpx~=0.27",
+    "ruff~=0.7",
+    "black~=24.10",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/medicscribe_server"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+pythonpath = ["src"]
