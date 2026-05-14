@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "medicscribe.soap_v1",
+  "title": "SOAP Note v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chief_complaint",
+    "subjective",
+    "objective",
+    "assessment",
+    "plan"
+  ],
+  "properties": {
+    "chief_complaint": {
+      "type": "string",
+      "description": "One-line patient-stated reason for visit, in the patient's own words where possible."
+    },
+    "subjective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["history_of_present_illness"],
+      "properties": {
+        "history_of_present_illness": { "type": "string" },
+        "past_medical_history": { "type": "string" },
+        "social_history": { "type": "string" },
+        "family_history": { "type": "string" },
+        "review_of_systems": { "type": "string" }
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vitals": { "type": "string" },
+        "physical_exam": { "type": "string" },
+        "investigations": { "type": "string" }
+      }
+    },
+    "assessment": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["problem"],
+        "properties": {
+          "problem": { "type": "string" },
+          "differential": { "type": "string" },
+          "icd10": { "type": "string" }
+        }
+      }
+    },
+    "plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action"],
+        "properties": {
+          "action": { "type": "string" },
+          "rationale": { "type": "string" }
+        }
+      }
+    },
+    "medications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "dose": { "type": "string" },
+          "frequency": { "type": "string" },
+          "duration": { "type": "string" },
+          "route": { "type": "string" },
+          "instructions": { "type": "string" }
+        }
+      }
+    },
+    "allergies": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "follow_up": { "type": "string" }
+  }
+}

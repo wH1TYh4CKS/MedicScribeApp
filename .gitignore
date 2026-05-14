@@ -1,0 +1,60 @@
+# --- Runtime data (PHI risk — never commit) ---
+# Ignore everything under data/ except .gitkeep markers, so the dir tree
+# survives a clone but no audio / transcripts / notes ever land in git.
+data/**
+!data/**/
+!data/**/.gitkeep
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.opus
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+hf_token*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# --- Android / Gradle ---
+.gradle/
+local.properties
+*.iml
+.idea/
+build/
+captures/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# --- IDE / OS ---
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Claude Code personal overrides (project settings.json IS committed) ---
+.claude/settings.local.json
+
+# --- Models (download separately, don't commit weights) ---
+models/
+*.bin
+*.safetensors
+*.gguf
+*.ct2

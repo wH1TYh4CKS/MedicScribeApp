@@ -1,0 +1,17 @@
+# Example custom template — DO NOT EDIT THIS FOLDER.
+# Copy it to llm/custom/<your_template_slug>/ and edit there.
+# v1.1 will expose this folder via the in-app custom-template editor.
+
+name: Example Custom Template
+slug: _example
+version: 0.0.1
+description: >
+  Reference contract for doctor-authored note templates. Copy this folder and
+  modify prompt.jinja, output_schema.json, and meta.yaml.
+language_hints: [en]
+fields:
+  - chief_complaint
+  - notes
+status: example
+introduced_in: 1.1.0
+deprecated_in: null
