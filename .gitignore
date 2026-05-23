@@ -58,3 +58,6 @@ models/
 *.safetensors
 *.gguf
 *.ct2
+
+# --- Graphify generated knowledge graph (regenerable from source) ---
+graphify-out/
