@@ -16,6 +16,16 @@ android {
         versionCode = 1
         versionName = "0.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val serverHost = (project.findProperty("medicscribe.serverHost") as? String)
+            ?: System.getenv("MEDICSCRIBE_SERVER_HOST")
+            ?: "10.0.2.2"
+        val serverPort = (project.findProperty("medicscribe.serverPort") as? String)
+            ?: System.getenv("MEDICSCRIBE_SERVER_PORT")
+            ?: "8080"
+        buildConfigField("String", "SERVER_HOST", "\"$serverHost\"")
+        buildConfigField("int", "SERVER_PORT", serverPort)
+        buildConfigField("String", "WS_PATH", "\"/ws/scribe\"")
     }
 
     buildTypes {
@@ -36,6 +46,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
