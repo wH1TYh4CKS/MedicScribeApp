@@ -14,6 +14,12 @@ dependencies = [
     "uvicorn[standard]~=0.32",
     "pydantic~=2.9",
     "pydantic-settings~=2.6",
+    "pyyaml~=6.0",
+    "numpy~=2.0",
+    "faster-whisper~=1.0.3",
+    "ctranslate2~=4.4",
+    "silero-vad~=5.1",
+    "requests~=2.32",
 ]
 
 [project.optional-dependencies]
@@ -42,3 +48,6 @@ target-version = ["py311"]
 testpaths = ["tests"]
 addopts = "-ra -q"
 pythonpath = ["src"]
+markers = [
+    "slow: requires real ML models (faster-whisper/silero) — run with -m slow",
+]

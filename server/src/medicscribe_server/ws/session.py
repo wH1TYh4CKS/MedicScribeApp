@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, TypeAdapter, ValidationError
@@ -14,7 +16,12 @@ from medicscribe_server.ws.protocol import (
     ErrorMessage,
     StartMessage,
     StopMessage,
+    TranscriptFinal,
 )
+
+if TYPE_CHECKING:
+    from medicscribe_server.asr.base import ASREngine
+    from medicscribe_server.asr.vad import Endpointer
 
 logger = logging.getLogger(__name__)
 _CLIENT_ADAPTER: TypeAdapter[ClientMessage] = TypeAdapter(ClientMessage)
@@ -33,14 +40,24 @@ class WSSession:
         ws: WebSocket,
         audio_dir: Path,
         sample_rate: int = 16000,
+        asr: ASREngine | None = None,
+        endpointer: Endpointer | None = None,
     ) -> None:
         self.ws = ws
         self.audio_dir = audio_dir
         self.sample_rate = sample_rate
+        self.asr = asr
+        self.endpointer = endpointer
         self.phase: SessionPhase = SessionPhase.INIT
         self.writer: WavWriter | None = None
         self.session_id: str | None = None
         self.bytes_written = 0
+        # Serialize whisper calls — the engine is not safe under concurrent use.
+        self._asr_lock = asyncio.Lock()
+
+    @property
+    def _transcribing(self) -> bool:
+        return self.asr is not None and self.endpointer is not None
 
     async def run(self) -> None:
         try:
@@ -52,13 +69,17 @@ class WSSession:
                 if "text" in message and message["text"] is not None:
                     await self._on_text(message["text"])
                 elif "bytes" in message and message["bytes"] is not None:
-                    self._on_pcm(message["bytes"])
+                    await self._on_pcm(message["bytes"])
                 if self.phase == SessionPhase.STOPPED:
                     break
         except WebSocketDisconnect:
             logger.info("Client disconnected (session=%s)", self.session_id)
         finally:
             self._finalize()
+            try:
+                await self.ws.close()
+            except Exception:
+                pass
 
     async def _on_text(self, text: str) -> None:
         try:
@@ -82,14 +103,36 @@ class WSSession:
         logger.info("Session %s recording -> %s", self.session_id, wav_path)
         await self._send(AckMessage(session_id=self.session_id))
 
-    def _on_pcm(self, data: bytes) -> None:
+    async def _on_pcm(self, data: bytes) -> None:
         if self.phase != SessionPhase.RECORDING or self.writer is None:
             logger.warning("Dropping %d bytes PCM in phase=%s", len(data), self.phase.value)
             return
         self.writer.write(data)
         self.bytes_written += len(data)
+        if self._transcribing:
+            self.endpointer.accept(data)
+            await self._drain_transcripts()
+
+    async def _drain_transcripts(self) -> None:
+        """Transcribe every completed utterance the endpointer has buffered."""
+        assert self.endpointer is not None and self.asr is not None
+        while (utt := self.endpointer.pop_utterance()) is not None:
+            await self._transcribe_and_send(utt)
+
+    async def _transcribe_and_send(self, pcm: bytes) -> None:
+        assert self.asr is not None
+        async with self._asr_lock:
+            segments = await asyncio.to_thread(self.asr.transcribe, pcm, self.sample_rate)
+        for seg in segments:
+            await self._send(
+                TranscriptFinal(text=seg.text, lang=seg.lang, t=seg.t0)
+            )
 
     async def _on_stop(self) -> None:
+        if self._transcribing and self.endpointer is not None:
+            tail = self.endpointer.flush()
+            if tail:
+                await self._transcribe_and_send(tail)
         if self.writer is not None:
             duration = self.writer.duration_seconds()
             self.writer.close()

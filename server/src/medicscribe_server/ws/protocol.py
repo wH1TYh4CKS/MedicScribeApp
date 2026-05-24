@@ -29,6 +29,7 @@ class TranscriptPartial(BaseModel):
     type: Literal["transcript_partial"] = "transcript_partial"
     text: str
     speaker: str | None = None
+    lang: str | None = None
     t: float
 
 
@@ -36,6 +37,7 @@ class TranscriptFinal(BaseModel):
     type: Literal["transcript_final"] = "transcript_final"
     text: str
     speaker: str | None = None
+    lang: str | None = None
     t: float
 
 

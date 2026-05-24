@@ -19,5 +19,9 @@ class Settings(BaseSettings):
     audio_channels: int = 1
     audio_sample_width: int = 2
 
+    # ASR — load whisper at boot. Disable for dev/tests that skip the 6 GB model.
+    asr_enabled: bool = True
+    asr_config_path: Path = Path("../llm/models/asr.yaml")
+
 
 settings = Settings()

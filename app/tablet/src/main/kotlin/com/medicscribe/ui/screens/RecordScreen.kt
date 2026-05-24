@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +34,7 @@ import com.medicscribe.audio.AudioCapture
 import com.medicscribe.audio.PcmStreamer
 import com.medicscribe.domain.RecordingPhase
 import com.medicscribe.domain.SessionState
+import com.medicscribe.domain.TranscriptLine
 import com.medicscribe.net.ClientMessage
 import com.medicscribe.net.ServerMessage
 import com.medicscribe.net.WsClient
@@ -73,6 +76,12 @@ class RecordController(private val scope: CoroutineScope) {
                                 statusText = "Recording ${m.sessionId.take(8)}",
                             )
                             streamer = PcmStreamer(capture, client).also { it.start(scope) }
+                        }
+                        is ServerMessage.TranscriptFinal -> {
+                            _state.value = _state.value.copy(
+                                transcript = _state.value.transcript +
+                                    TranscriptLine(text = m.text, lang = m.lang),
+                            )
                         }
                         is ServerMessage.ErrorMessage -> {
                             _state.value = _state.value.copy(
@@ -154,6 +163,30 @@ fun RecordScreen() {
             Text(state.statusText, style = MaterialTheme.typography.titleMedium)
             state.lastError?.let {
                 Text(it, color = MaterialTheme.colorScheme.error)
+            }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (state.transcript.isEmpty()) {
+                    item {
+                        Text(
+                            "Transcript will appear here…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    items(state.transcript) { line ->
+                        val prefix = line.lang?.let { "[$it] " } ?: ""
+                        Text(
+                            "$prefix${line.text}",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
             }
             val recording = state.phase == RecordingPhase.RECORDING
             Button(

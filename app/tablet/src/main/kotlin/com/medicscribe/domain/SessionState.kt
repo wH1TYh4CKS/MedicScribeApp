@@ -10,9 +10,15 @@ enum class RecordingPhase {
     ERROR,
 }
 
+data class TranscriptLine(
+    val text: String,
+    val lang: String? = null,
+)
+
 data class SessionState(
     val phase: RecordingPhase = RecordingPhase.IDLE,
     val sessionId: String? = null,
     val statusText: String = "Idle",
     val lastError: String? = null,
+    val transcript: List<TranscriptLine> = emptyList(),
 )

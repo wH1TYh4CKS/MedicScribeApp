@@ -15,6 +15,8 @@ def tmp_audio_dir(tmp_path, monkeypatch):
     audio_dir = tmp_path / "audio"
     audio_dir.mkdir()
     monkeypatch.setattr(settings, "audio_dir", audio_dir)
+    # Phase 1 tests run WAV-only — never load the 6 GB whisper model.
+    monkeypatch.setattr(settings, "asr_enabled", False)
     yield audio_dir
 
 

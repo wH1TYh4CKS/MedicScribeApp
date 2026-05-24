@@ -33,6 +33,7 @@ sealed class ServerMessage {
     data class TranscriptPartial(
         val text: String,
         val speaker: String? = null,
+        val lang: String? = null,
         val t: Float,
     ) : ServerMessage()
 
@@ -41,6 +42,7 @@ sealed class ServerMessage {
     data class TranscriptFinal(
         val text: String,
         val speaker: String? = null,
+        val lang: String? = null,
         val t: Float,
     ) : ServerMessage()
 
