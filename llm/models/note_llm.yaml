@@ -2,33 +2,32 @@
 # Swap engine/model here, restart server, no code change.
 # Schema validated by server/src/medicscribe_server/llm_client/registry.py.
 
-engine: stub                  # was: vllm. Phase 3 builds against stub; flip to vllm when Qwen is served.
-model_id: Qwen/Qwen2.5-14B-Instruct-AWQ
+engine: llama-cpp             # llama-cpp-python OpenAI-compat server
+model_id: qwen2.5-14b-q4_k_m  # informational; llama-cpp ignores the model field
 revision: null
 
-# Connection details (the server connects to a separate vLLM container)
+# llama-cpp-python `python -m llama_cpp.server` on port 8000, no auth.
 endpoint: http://localhost:8000/v1
-api_key: null                 # not needed for local vllm; set for openai-compat
+api_key: null
 timeout_seconds: 60
 
-params:
-  max_model_len: 32768
-  gpu_memory_utilization: 0.55
-  max_tokens: 800
-  temperature: 0.2
-  top_p: 0.9
-  top_k: 40
-  repetition_penalty: 1.05
-  seed: null
+# Qwen emits raw text (S: ... O: ... A: ... P: ...), no JSON.
+# Wrap as {soap_text: <raw>} so the SOAP schema validates.
+response_text_field: soap_text
 
+params:
+  max_tokens: 1024
+  temperature: 0.0          # greedy: minimize creative invention
+  top_p: 1.0
+
+# Guided JSON off; strict-extraction prompt handles structure.
 guided_decoding:
-  enabled: true
-  backend: outlines           # outlines | xgrammar | null
-  # JSON Schema source: each note template provides its own output_schema.json.
+  enabled: false
+  backend: null
 
 # Optional fallback model — used if the primary returns an empty / invalid response.
 fallback:
   enabled: false
   engine: vllm
-  model_id: SeaMLLM/SeaLLM-v3-7B-Chat
+  model_id: Qwen/Qwen2.5-14B-Instruct-AWQ
   endpoint: http://localhost:8001/v1
