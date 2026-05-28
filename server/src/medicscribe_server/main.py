@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from medicscribe_server.store.reaper import purge_recordings
+
+    purge_recordings(settings.audio_dir, settings.recording_ttl_seconds)
+
     app.state.asr_engine = None
     app.state.make_endpointer = None
     if settings.asr_enabled:
@@ -25,6 +29,20 @@ async def lifespan(app: FastAPI):
         logger.info("ASR model ready")
     else:
         logger.info("ASR disabled (MEDICSCRIBE_ASR_ENABLED=false) — WAV-only mode")
+
+    app.state.note_generator = None
+    if settings.note_enabled:
+        from medicscribe_server.llm_client.registry import build_llm_client
+        from medicscribe_server.notes.generator import NoteGenerator
+        from medicscribe_server.notes.template import NoteTemplate
+
+        client = build_llm_client(settings.note_config_path)
+        template = NoteTemplate.load(settings.note_template, settings.llm_root)
+        app.state.note_generator = NoteGenerator(client, template)
+        logger.info("Note generator ready (engine from %s)", settings.note_config_path)
+    else:
+        logger.info("Note generation disabled (MEDICSCRIBE_NOTE_ENABLED=false)")
+
     try:
         yield
     finally:
