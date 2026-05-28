@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
@@ -20,12 +21,15 @@ def build_llm_client(config_path: Path) -> LLMClient:
     if engine == "stub":
         return StubLLMClient()
     if engine in ("vllm", "openai-compat", "tgi"):
+        # Keep secrets out of the committed yaml: fall back to env var when
+        # api_key is null. llmw's bearer token lives in $MEDICSCRIBE_NOTE_API_KEY.
+        api_key = cfg.get("api_key") or os.environ.get("MEDICSCRIBE_NOTE_API_KEY")
         return OpenAICompatClient(
             endpoint=cfg["endpoint"],
             model=cfg["model_id"],
             params=cfg.get("params", {}),
             timeout=float(cfg.get("timeout_seconds", 60)),
-            api_key=cfg.get("api_key"),
+            api_key=api_key,
             guided=bool(cfg.get("guided_decoding", {}).get("enabled", True)),
         )
     raise ValueError(f"unknown note-gen engine: {engine}")
