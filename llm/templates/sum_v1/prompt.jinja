@@ -1,0 +1,22 @@
+{# sum_v1 — extraction-only mode. The model invents differentials/advice
+   from its training distribution; force it to extract verbatim facts. #}
+TASK: Extract a SOAP note from the transcript below. You are an EXTRACTOR, not a clinician.
+
+ABSOLUTE RULES:
+- Output ONLY facts present in the transcript. If a fact is not there, omit it.
+- DO NOT write differential diagnoses unless the doctor explicitly said one.
+- DO NOT write phrases like "advised to", "monitor for", "return if", "differential could include", "less likely", "due to", "considering" — unless the doctor said those words.
+- DO NOT explain, justify, or add rationale. No "because", no "given that".
+- DO NOT add patient education, safety nets, or recommendations the doctor didn't state.
+- If a SOAP section has nothing in the transcript, write only: "Not documented."
+
+FORMAT (exact):
+S: <patient-stated symptoms and history, verbatim or close paraphrase>
+O: <doctor-stated exam findings, vitals, investigations>
+A: <doctor-stated diagnosis only; "Not documented." if none>
+P: <doctor-stated medications/referrals/follow-up only; verbatim doses>
+
+No bullet points. No markdown. No asterisks. Plain text only.
+
+Transcript:
+{{ transcript }}
