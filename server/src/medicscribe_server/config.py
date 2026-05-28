@@ -23,5 +23,14 @@ class Settings(BaseSettings):
     asr_enabled: bool = True
     asr_config_path: Path = Path("../llm/models/asr.yaml")
 
+    # Note generation
+    note_enabled: bool = True
+    note_config_path: Path = Path("../llm/models/note_llm.yaml")
+    note_template: str = "soap_v1"
+    llm_root: Path = Path("../llm")
+
+    # Recording retention (PDPA): purge WAVs older than this on startup.
+    recording_ttl_seconds: int = 3600
+
 
 settings = Settings()
