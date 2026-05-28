@@ -8,10 +8,14 @@ from medicscribe_server.llm_client.base import LLMClient, LLMError
 
 
 class OpenAICompatClient(LLMClient):
-    """Talks to an OpenAI-compatible server (vLLM serving Qwen2.5-14B-AWQ).
+    """Talks to any OpenAI-compatible server (vLLM, llama-cpp-python, TGI…).
 
-    Uses vLLM's `guided_json` extension for schema-constrained output.
-    Coded now; exercised against a real vLLM in a later phase.
+    Two response modes:
+      - **JSON mode (default):** content is parsed as JSON. Pair with `guided=True`
+        on vLLM (uses `guided_json`) for schema-constrained output.
+      - **Text-wrapper mode (`text_field` set):** content is taken as raw text
+        and wrapped as ``{text_field: content}``. Use for models trained to emit
+        free-form text (e.g. omi-health/sum-small emits S:/O:/A:/P:).
     """
 
     def __init__(
@@ -23,11 +27,14 @@ class OpenAICompatClient(LLMClient):
         api_key: str | None = None,
         guided: bool = True,
         http_client: httpx.Client | None = None,
+        text_field: str | None = None,
     ) -> None:
         self._endpoint = endpoint.rstrip("/")
         self._model = model
         self._params = params or {}
-        self._guided = guided
+        # `guided_json` is meaningless when we're not asking for JSON output.
+        self._guided = guided and text_field is None
+        self._text_field = text_field
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
         self._owns_http = http_client is None
         self._http = http_client or httpx.Client(timeout=timeout, headers=headers)
@@ -54,6 +61,8 @@ class OpenAICompatClient(LLMClient):
             content = resp.json()["choices"][0]["message"]["content"]
         except (httpx.HTTPError, KeyError, ValueError) as exc:
             raise LLMError(f"LLM request failed: {exc}") from exc
+        if self._text_field is not None:
+            return {self._text_field: content}
         try:
             return json.loads(content)
         except json.JSONDecodeError as exc:

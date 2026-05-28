@@ -20,7 +20,7 @@ def build_llm_client(config_path: Path) -> LLMClient:
     engine = cfg.get("engine")
     if engine == "stub":
         return StubLLMClient()
-    if engine in ("vllm", "openai-compat", "tgi"):
+    if engine in ("vllm", "openai-compat", "tgi", "llama-cpp"):
         # Keep secrets out of the committed yaml: fall back to env var when
         # api_key is null. llmw's bearer token lives in $MEDICSCRIBE_NOTE_API_KEY.
         api_key = cfg.get("api_key") or os.environ.get("MEDICSCRIBE_NOTE_API_KEY")
@@ -31,5 +31,8 @@ def build_llm_client(config_path: Path) -> LLMClient:
             timeout=float(cfg.get("timeout_seconds", 60)),
             api_key=api_key,
             guided=bool(cfg.get("guided_decoding", {}).get("enabled", True)),
+            # When set, return ``{text_field: raw_content}`` instead of parsing
+            # JSON. Use with models trained to emit prose (e.g. sum-small).
+            text_field=cfg.get("response_text_field"),
         )
     raise ValueError(f"unknown note-gen engine: {engine}")
