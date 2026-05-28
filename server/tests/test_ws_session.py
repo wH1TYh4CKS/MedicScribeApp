@@ -1,7 +1,6 @@
 import json
 import math
 import struct
-import wave
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,13 +38,9 @@ def test_ws_records_one_second_pcm(tmp_audio_dir):
         for i in range(0, len(pcm), frame_size):
             ws.send_bytes(pcm[i : i + frame_size])
         ws.send_text(json.dumps({"type": "stop"}))
+    # PDPA: WAV is deleted at stop; no audio persists after the session ends.
     wav_path = tmp_audio_dir / f"{session_id}.wav"
-    assert wav_path.exists()
-    with wave.open(str(wav_path), "rb") as wf:
-        assert wf.getnchannels() == 1
-        assert wf.getframerate() == 16000
-        assert wf.getsampwidth() == 2
-        assert abs(wf.getnframes() / 16000 - 1.0) < 0.05
+    assert not wav_path.exists()
 
 
 def test_ws_invalid_message_returns_error(tmp_audio_dir):

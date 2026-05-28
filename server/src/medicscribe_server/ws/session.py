@@ -14,6 +14,8 @@ from medicscribe_server.ws.protocol import (
     AckMessage,
     ClientMessage,
     ErrorMessage,
+    NoteDone,
+    NoteProgress,
     StartMessage,
     StopMessage,
     TranscriptFinal,
@@ -22,6 +24,7 @@ from medicscribe_server.ws.protocol import (
 if TYPE_CHECKING:
     from medicscribe_server.asr.base import ASREngine
     from medicscribe_server.asr.vad import Endpointer
+    from medicscribe_server.notes.generator import NoteGenerator
 
 logger = logging.getLogger(__name__)
 _CLIENT_ADAPTER: TypeAdapter[ClientMessage] = TypeAdapter(ClientMessage)
@@ -42,15 +45,19 @@ class WSSession:
         sample_rate: int = 16000,
         asr: ASREngine | None = None,
         endpointer: Endpointer | None = None,
+        note_generator: "NoteGenerator | None" = None,
     ) -> None:
         self.ws = ws
         self.audio_dir = audio_dir
         self.sample_rate = sample_rate
         self.asr = asr
         self.endpointer = endpointer
+        self.note_generator = note_generator
         self.phase: SessionPhase = SessionPhase.INIT
         self.writer: WavWriter | None = None
         self.session_id: str | None = None
+        self.wav_path: Path | None = None
+        self.transcript_lines: list[str] = []
         self.bytes_written = 0
         # Serialize whisper calls — the engine is not safe under concurrent use.
         self._asr_lock = asyncio.Lock()
@@ -97,10 +104,10 @@ class WSSession:
             await self._send_error("ALREADY_STARTED", "Session already started")
             return
         self.session_id = msg.session_id
-        wav_path = self.audio_dir / f"{self.session_id}.wav"
-        self.writer = WavWriter(wav_path, sample_rate=self.sample_rate)
+        self.wav_path = self.audio_dir / f"{self.session_id}.wav"
+        self.writer = WavWriter(self.wav_path, sample_rate=self.sample_rate)
         self.phase = SessionPhase.RECORDING
-        logger.info("Session %s recording -> %s", self.session_id, wav_path)
+        logger.info("Session %s recording -> %s", self.session_id, self.wav_path)
         await self._send(AckMessage(session_id=self.session_id))
 
     async def _on_pcm(self, data: bytes) -> None:
@@ -124,6 +131,7 @@ class WSSession:
         async with self._asr_lock:
             segments = await asyncio.to_thread(self.asr.transcribe, pcm, self.sample_rate)
         for seg in segments:
+            self.transcript_lines.append(seg.text)
             await self._send(
                 TranscriptFinal(text=seg.text, lang=seg.lang, t=seg.t0)
             )
@@ -139,11 +147,34 @@ class WSSession:
             self.writer = None
             logger.info(
                 "Session %s stopped. bytes=%d duration=%.2fs",
-                self.session_id,
-                self.bytes_written,
-                duration,
+                self.session_id, self.bytes_written, duration,
             )
+        # PDPA: note-gen uses the transcript text, not the audio. Delete the WAV now.
+        self._delete_wav()
+        await self._maybe_generate_note()
         self.phase = SessionPhase.STOPPED
+
+    def _delete_wav(self) -> None:
+        if self.wav_path is not None:
+            try:
+                self.wav_path.unlink(missing_ok=True)
+            except OSError:
+                logger.warning("could not delete wav for session %s", self.session_id)
+            self.wav_path = None
+
+    async def _maybe_generate_note(self) -> None:
+        transcript = "\n".join(self.transcript_lines).strip()
+        if self.note_generator is None or not transcript:
+            return
+        await self._send(NoteProgress(stage="generating", pct=50))
+        try:
+            note = await asyncio.to_thread(self.note_generator.generate, transcript)
+        except Exception as exc:  # NoteGenerationError and anything unexpected
+            logger.warning("note generation failed for session %s: %s",
+                           self.session_id, type(exc).__name__)
+            await self._send_error("NOTE_FAILED", "Note generation failed")
+            return
+        await self._send(NoteDone(note=note, raw_transcript=transcript))
 
     async def _send(self, msg: BaseModel) -> None:
         await self.ws.send_text(msg.model_dump_json())
@@ -162,3 +193,4 @@ class WSSession:
             except Exception:
                 logger.exception("Failed to close writer in finalize")
             self.writer = None
+        self._delete_wav()
