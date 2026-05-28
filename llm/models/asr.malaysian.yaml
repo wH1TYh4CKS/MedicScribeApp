@@ -1,0 +1,31 @@
+# PRESET (not active). Malaysian-Whisper-turbo-v3 + transcribe — for NATIVE-SCRIPT display
+# (Manglish EN/MS verbatim). Rejected as product default: cannot emit Mandarin Hanzi, and its
+# translate task leaves Malay untranslated. Active product config = asr.yaml (large-v3 + translate).
+# To use: point Settings.asr_config_path here, restart.
+
+engine: faster-whisper
+model_id: /home/whity/MedicScribeApp/llm/models/ct2-malaysian-whisper-turbo-v3
+revision: null
+device: cuda
+compute_type: float16         # TIER KNOB: float16 | int8_float16 | int8
+
+params:
+  beam_size: 5
+  best_of: 5
+  temperature: 0.0
+  vad_filter: false           # Endpointer does silero VAD upstream; inner VAD crashes on short audio
+  vad_threshold: 0.5
+  language: null              # per-utterance auto-detect (flips EN<->MS on Manglish)
+  task: transcribe
+  initial_prompt: null
+
+streaming:
+  window_seconds: 5
+  hop_seconds: 1
+  max_buffer_seconds: 30
+
+vad:
+  engine: silero
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500

@@ -1,0 +1,30 @@
+# ASR model registry — read at server boot
+# Swap engine/model here, restart server, no code change.
+# Schema validated by server/src/medicscribe_server/asr/registry.py.
+
+engine: faster-whisper        # one of: faster-whisper | openai-whisper | whisperx
+model_id: large-v3            # HF repo id or local path
+revision: null                # optional pin (e.g. "v20240930")
+device: cuda                  # cuda | cpu | mps
+compute_type: float16         # float16 | int8_float16 | int8 | float32
+
+params:
+  beam_size: 5
+  best_of: 5
+  temperature: 0.0
+  vad_filter: true
+  vad_threshold: 0.5
+  language: null              # null = auto-detect (required for code-switched Manglish)
+  task: transcribe            # transcribe | translate
+  initial_prompt: null
+
+streaming:
+  window_seconds: 5
+  hop_seconds: 1
+  max_buffer_seconds: 30
+
+vad:
+  engine: silero              # silero | webrtc | none
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500

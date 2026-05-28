@@ -1,0 +1,44 @@
+# ASR model registry — read at server boot
+# Swap engine/model here, restart server, no code change.
+# Schema validated by server/src/medicscribe_server/asr/registry.py.
+
+engine: faster-whisper        # one of: faster-whisper | openai-whisper | whisperx
+# Stock Whisper large-v3 + task=translate. Product output = ENGLISH doctor notes, so we
+# translate-at-ASR: any spoken lang (MS/EN/ZH/TA/Manglish) -> English in one pass. No model
+# routing, no language picker. Tested: large-v3 translate gives clean English for Mandarin,
+# Malay, and Manglish. The Malaysian fine-tune was REJECTED here — its translate task leaves
+# Malay untranslated, and it cannot emit Mandarin Hanzi (it forces EN/MS). Kept on disk at
+# ct2-malaysian-whisper-turbo-v3/ + asr.malaysian.yaml in case native-script display is ever needed.
+model_id: large-v3
+revision: null                # optional pin (e.g. "v20240930")
+device: cuda                  # cuda | cpu | mps
+compute_type: float16         # TIER KNOB: float16 (premium) | int8_float16 (standard) | int8 (budget)
+
+params:
+  beam_size: 5
+  best_of: 5
+  temperature: 0.0
+  vad_filter: false           # Endpointer already does silero VAD upstream. Inner VAD here
+                              # is redundant AND on short utterances strips audio below the
+                              # language-detection minimum -> faster-whisper crashes.
+  vad_threshold: 0.5
+  language: null              # null = auto-detect source lang; translate task then outputs English.
+                              # Short-audio detect crash guarded in engine + vad_filter off.
+  task: translate             # translate (-> English, product default) | transcribe (native script)
+  condition_on_previous_text: false   # stop large-v3 repetition loops on longer utterances
+  initial_prompt: null        # DELIBERATELY null. A medical prompt made noise-hallucinations
+                              # sound clinically real ("...give you a prescription") with ~zero
+                              # gain on real speech. Without it, noise hallucinations are obvious
+                              # non-clinical garbage. silero VAD (Endpointer) gates noise anyway;
+                              # the note-LLM handles drug-name/clinical normalization.
+
+streaming:
+  window_seconds: 5
+  hop_seconds: 1
+  max_buffer_seconds: 30
+
+vad:
+  engine: silero              # silero | webrtc | none
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500

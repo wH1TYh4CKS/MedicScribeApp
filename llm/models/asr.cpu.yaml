@@ -1,0 +1,31 @@
+# DEV-ONLY ASR override — CPU inference.
+# Use when the GPUs are occupied (e.g. local LM holds all VRAM).
+# Boot with: MEDICSCRIBE_ASR_CONFIG_PATH=../llm/models/asr.cpu.yaml
+# Production uses asr.yaml (device: cuda). Do not ship this as default.
+
+engine: faster-whisper
+model_id: large-v3
+revision: null
+device: cpu
+compute_type: int8
+
+params:
+  beam_size: 5
+  best_of: 5
+  temperature: 0.0
+  vad_filter: true
+  vad_threshold: 0.5
+  language: null              # null = auto-detect (required for code-switched Manglish)
+  task: transcribe
+  initial_prompt: null
+
+streaming:
+  window_seconds: 5
+  hop_seconds: 1
+  max_buffer_seconds: 30
+
+vad:
+  engine: silero
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500

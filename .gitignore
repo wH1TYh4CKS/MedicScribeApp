@@ -53,7 +53,9 @@ Thumbs.db
 .claude/settings.local.json
 
 # --- Models (download separately, don't commit weights) ---
-models/
+# Ignore weight subdirs under llm/models/ (ct2-*, hf snapshots, etc.) but keep
+# small *.yaml engine configs and README.md at the top of llm/models/ tracked.
+llm/models/*/
 *.bin
 *.safetensors
 *.gguf
