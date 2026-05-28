@@ -1,7 +1,7 @@
 # Phase 3 — Note Generation Design
 
 **Date:** 2026-05-27
-**Status:** Approved for planning
+**Status:** Implemented (stub LLM). vLLM Qwen wiring + latency/quality validation deferred.
 **Depends on:** Phase 2 live ASR (merged). ASR config locked: `large-v3` + `task=translate` → English transcript.
 
 ## Product framing (drives every decision)
