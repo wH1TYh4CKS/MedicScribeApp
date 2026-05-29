@@ -11,12 +11,21 @@ ABSOLUTE RULES:
 - If a SOAP section has nothing in the transcript, write only: "Not documented."
 
 FORMAT (exact):
-S: <patient-stated symptoms and history, verbatim or close paraphrase>
-O: <doctor-stated exam findings, vitals, investigations>
-A: <doctor-stated diagnosis only; "Not documented." if none>
-P: <doctor-stated medications/referrals/follow-up only; verbatim doses>
+S:
+- <one short point per patient-stated symptom/history item>
+O:
+- <one short point per doctor-stated finding/vital/investigation>
+A:
+- <doctor-stated diagnosis only, one per line; "Not documented." if none>
+P:
+- <doctor-stated medication/referral/follow-up, one per line; verbatim doses>
 
-No bullet points. No markdown. No asterisks. Plain text only.
+STYLE:
+- Point form only. Each point on its own line, starting with "- ".
+- Keep every point short and telegraphic — no full sentences, no filler words.
+- One fact per point. Do not merge multiple facts into one line.
+- If a section has nothing in the transcript, write only: "Not documented."
+- No markdown headers, no asterisks, no numbering. Use "- " bullets only.
 
 Transcript:
 {{ transcript }}
