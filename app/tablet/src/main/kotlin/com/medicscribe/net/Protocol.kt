@@ -47,6 +47,12 @@ sealed class ServerMessage {
     ) : ServerMessage()
 
     @Serializable
+    @SerialName("audio_deleted")
+    data class AudioDeleted(
+        @SerialName("session_id") val sessionId: String,
+    ) : ServerMessage()
+
+    @Serializable
     @SerialName("note_progress")
     data class NoteProgress(
         val stage: String,

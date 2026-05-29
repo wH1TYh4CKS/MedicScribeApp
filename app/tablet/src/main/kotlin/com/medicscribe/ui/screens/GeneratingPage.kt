@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.medicscribe.ui.theme.NavyPrimary
 import com.medicscribe.ui.theme.ScribeWhite
+import com.medicscribe.ui.theme.SoftWhite
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +35,7 @@ fun GeneratingPage(statusText: String) {
                 ),
             )
         },
-        containerColor = ScribeWhite,
+        containerColor = SoftWhite,
     ) { padding ->
         Box(
             modifier = Modifier

@@ -90,3 +90,15 @@ def test_note_failure_sends_error_and_wav_still_deleted(tmp_path, monkeypatch):
     messages = _run_session(client, "s-note-2")
     assert any(m["type"] == "error" and m["code"] == "NOTE_FAILED" for m in messages)
     assert list(audio_dir.glob("*.wav")) == []
+
+
+def test_audio_deleted_emitted_before_note(tmp_path, monkeypatch):
+    client, audio_dir = _make_client(tmp_path, monkeypatch, StubNoteGen())
+    messages = _run_session(client, "s-note-3")
+    types = [m["type"] for m in messages]
+    # Server confirms deletion to the client (powers the privacy receipt).
+    assert "audio_deleted" in types
+    # And it must arrive before the note — audio is gone before note-gen runs.
+    assert types.index("audio_deleted") < types.index("note_done")
+    deleted = next(m for m in messages if m["type"] == "audio_deleted")
+    assert deleted["session_id"] == "s-note-3"

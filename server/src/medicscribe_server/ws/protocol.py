@@ -41,6 +41,11 @@ class TranscriptFinal(BaseModel):
     t: float
 
 
+class AudioDeleted(BaseModel):
+    type: Literal["audio_deleted"] = "audio_deleted"
+    session_id: str
+
+
 class NoteProgress(BaseModel):
     type: Literal["note_progress"] = "note_progress"
     stage: str
@@ -60,6 +65,14 @@ class ErrorMessage(BaseModel):
 
 
 ServerMessage = Annotated[
-    Union[AckMessage, TranscriptPartial, TranscriptFinal, NoteProgress, NoteDone, ErrorMessage],
+    Union[
+        AckMessage,
+        TranscriptPartial,
+        TranscriptFinal,
+        AudioDeleted,
+        NoteProgress,
+        NoteDone,
+        ErrorMessage,
+    ],
     Field(discriminator="type"),
 ]

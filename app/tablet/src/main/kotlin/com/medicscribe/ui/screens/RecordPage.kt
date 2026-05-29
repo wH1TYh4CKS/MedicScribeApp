@@ -1,12 +1,14 @@
 package com.medicscribe.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,14 +35,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.medicscribe.domain.RecordingPhase
 import com.medicscribe.domain.SessionState
+import com.medicscribe.ui.theme.InkBlack
 import com.medicscribe.ui.theme.NavyPrimary
 import com.medicscribe.ui.theme.RecordRed
 import com.medicscribe.ui.theme.ScribeWhite
+import com.medicscribe.ui.theme.SoftWhite
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordPage(
     state: SessionState,
+    serverHost: String,
     onRecordClick: () -> Unit,
 ) {
     val recording = state.phase == RecordingPhase.RECORDING
@@ -65,14 +70,20 @@ fun RecordPage(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = ScribeWhite,
+        containerColor = SoftWhite,
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentAlignment = Alignment.Center,
         ) {
+            PrivacyBanner(serverHost)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -82,6 +93,7 @@ fun RecordPage(
                         .size(160.dp)
                         .clip(CircleShape)
                         .background(if (busy) Color.Gray else RecordRed)
+                        .border(3.dp, InkBlack, CircleShape)
                         .clickable(enabled = !busy) { onRecordClick() },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -109,6 +121,7 @@ fun RecordPage(
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
+            }
             }
         }
     }

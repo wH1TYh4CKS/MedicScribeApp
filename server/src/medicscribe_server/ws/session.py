@@ -12,6 +12,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from medicscribe_server.store.audio_writer import WavWriter
 from medicscribe_server.ws.protocol import (
     AckMessage,
+    AudioDeleted,
     ClientMessage,
     ErrorMessage,
     NoteDone,
@@ -147,6 +148,10 @@ class WSSession:
             )
         # PDPA: note-gen uses the transcript text, not the audio. Delete the WAV now.
         self._delete_wav()
+        # Tell the client the audio is gone so the app can show a real, server-
+        # confirmed deletion timestamp in its privacy receipt (not a UI claim).
+        if self.session_id is not None:
+            await self._send(AudioDeleted(session_id=self.session_id))
         await self._maybe_generate_note()
         self.phase = SessionPhase.STOPPED
 

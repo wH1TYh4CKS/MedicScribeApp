@@ -58,8 +58,16 @@ class RecordController(private val scope: CoroutineScope) {
                             _state.value = _state.value.copy(
                                 phase = RecordingPhase.RECORDING,
                                 statusText = "Recording ${m.sessionId.take(8)}",
+                                recordingStartedAt = System.currentTimeMillis(),
                             )
                             streamer = PcmStreamer(capture, client).also { it.start(scope) }
+                        }
+                        is ServerMessage.AudioDeleted -> {
+                            // Server confirms the WAV is gone (PDPA). Stamp it for
+                            // the privacy receipt — real proof, not a claim.
+                            _state.value = _state.value.copy(
+                                audioDeletedAt = System.currentTimeMillis(),
+                            )
                         }
                         is ServerMessage.TranscriptFinal -> {
                             _state.value = _state.value.copy(
@@ -79,6 +87,7 @@ class RecordController(private val scope: CoroutineScope) {
                                 note = m.note,
                                 rawTranscript = m.rawTranscript,
                                 statusText = "Note ready",
+                                noteReadyAt = System.currentTimeMillis(),
                             )
                             // Note is in hand. Close the socket ourselves so OkHttp
                             // stops pinging — otherwise a lagging server-side close
@@ -128,6 +137,7 @@ class RecordController(private val scope: CoroutineScope) {
         _state.value = _state.value.copy(
             phase = RecordingPhase.STOPPING,
             statusText = "Stopping...",
+            recordingStoppedAt = System.currentTimeMillis(),
         )
         streamer?.stop()
         streamer = null
@@ -166,14 +176,19 @@ fun RecordScreen() {
         if (granted) controller.start()
     }
 
+    val serverHost = BuildConfig.SERVER_HOST
+
     when (state.phase) {
         RecordingPhase.GENERATING_NOTE -> GeneratingPage(statusText = state.statusText)
         RecordingPhase.NOTE_READY -> NotePage(
             note = state.note,
+            state = state,
+            serverHost = serverHost,
             onNewSession = { controller.reset() },
         )
         else -> RecordPage(
             state = state,
+            serverHost = serverHost,
             onRecordClick = {
                 when {
                     state.phase == RecordingPhase.RECORDING -> controller.stop()

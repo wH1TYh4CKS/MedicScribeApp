@@ -1,6 +1,7 @@
 package com.medicscribe.ui.screens
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,8 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.medicscribe.domain.SessionState
+import com.medicscribe.ui.theme.InkBlack
 import com.medicscribe.ui.theme.NavyPrimary
 import com.medicscribe.ui.theme.ScribeWhite
+import com.medicscribe.ui.theme.SoftWhite
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -55,7 +59,12 @@ private fun parseSoap(text: String): List<Pair<String, String>> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotePage(note: JsonObject?, onNewSession: () -> Unit) {
+fun NotePage(
+    note: JsonObject?,
+    state: SessionState,
+    serverHost: String,
+    onNewSession: () -> Unit,
+) {
     val context = LocalContext.current
     val soapText = (note?.get("soap_text") as? JsonPrimitive)?.contentOrNull?.trim().orEmpty()
     val sections = parseSoap(soapText)
@@ -92,12 +101,13 @@ fun NotePage(note: JsonObject?, onNewSession: () -> Unit) {
                     onClick = onNewSession,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = NavyPrimary),
+                    border = BorderStroke(1.dp, InkBlack),
                 ) {
                     Text("Done", color = ScribeWhite)
                 }
             }
         },
-        containerColor = ScribeWhite,
+        containerColor = SoftWhite,
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -105,6 +115,10 @@ fun NotePage(note: JsonObject?, onNewSession: () -> Unit) {
                 .padding(padding)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
+            item {
+                PrivacyBanner(serverHost)
+                Spacer(Modifier.height(16.dp))
+            }
             itemsIndexed(sections) { idx, (label, body) ->
                 Text(
                     label,
@@ -122,6 +136,10 @@ fun NotePage(note: JsonObject?, onNewSession: () -> Unit) {
                     HorizontalDivider(color = NavyPrimary.copy(alpha = 0.15f))
                     Spacer(Modifier.height(16.dp))
                 }
+            }
+            item {
+                Spacer(Modifier.height(24.dp))
+                LifecycleCard(state)
             }
         }
     }

@@ -30,4 +30,10 @@ data class SessionState(
     // One-shot signal: set when a session is wiped via Done, so the idle screen
     // can flash a "Cleared" confirmation. Reset to false on the next recording.
     val justCleared: Boolean = false,
+    // Data-lifecycle timestamps (epoch millis), each set when the matching event
+    // is observed. Surfaced in the privacy receipt card on the note screen.
+    val recordingStartedAt: Long? = null,
+    val recordingStoppedAt: Long? = null,
+    val audioDeletedAt: Long? = null,
+    val noteReadyAt: Long? = null,
 )
