@@ -19,9 +19,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +47,14 @@ fun RecordPage(
     val busy = state.phase == RecordingPhase.STOPPING ||
         state.phase == RecordingPhase.CONNECTING
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    // Flash the confirmation once when the session was just wiped via Done.
+    LaunchedEffect(state.justCleared) {
+        if (state.justCleared) {
+            snackbarHostState.showSnackbar("All consultation data cleared")
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -52,6 +64,7 @@ fun RecordPage(
                 ),
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = ScribeWhite,
     ) { padding ->
         Box(

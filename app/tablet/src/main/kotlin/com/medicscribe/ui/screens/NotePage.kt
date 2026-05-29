@@ -93,7 +93,7 @@ fun NotePage(note: JsonObject?, onNewSession: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = NavyPrimary),
                 ) {
-                    Text("New Session", color = ScribeWhite)
+                    Text("Done", color = ScribeWhite)
                 }
             }
         },

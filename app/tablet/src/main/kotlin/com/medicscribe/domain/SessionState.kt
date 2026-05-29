@@ -27,4 +27,7 @@ data class SessionState(
     val transcript: List<TranscriptLine> = emptyList(),
     val note: JsonObject? = null,
     val rawTranscript: String? = null,
+    // One-shot signal: set when a session is wiped via Done, so the idle screen
+    // can flash a "Cleared" confirmation. Reset to false on the next recording.
+    val justCleared: Boolean = false,
 )

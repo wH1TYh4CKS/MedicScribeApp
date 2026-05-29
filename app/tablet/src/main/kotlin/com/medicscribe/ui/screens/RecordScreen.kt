@@ -80,6 +80,14 @@ class RecordController(private val scope: CoroutineScope) {
                                 rawTranscript = m.rawTranscript,
                                 statusText = "Note ready",
                             )
+                            // Note is in hand. Close the socket ourselves so OkHttp
+                            // stops pinging — otherwise a lagging server-side close
+                            // (e.g. over Tailscale) trips the 20s ping timeout and
+                            // would knock us off the note screen.
+                            streamer?.stop()
+                            streamer = null
+                            ws?.close()
+                            ws = null
                         }
                         is ServerMessage.ErrorMessage -> {
                             _state.value = _state.value.copy(
@@ -91,17 +99,23 @@ class RecordController(private val scope: CoroutineScope) {
                         else -> Unit
                     }
                     is WsEvent.Failure -> {
-                        _state.value = _state.value.copy(
-                            phase = RecordingPhase.ERROR,
-                            lastError = ev.t.message,
-                            statusText = "WS failure",
-                        )
+                        // Once the note is shown the socket is being torn down;
+                        // ignore late failures/pings so the note screen survives.
+                        if (_state.value.phase != RecordingPhase.NOTE_READY) {
+                            _state.value = _state.value.copy(
+                                phase = RecordingPhase.ERROR,
+                                lastError = ev.t.message,
+                                statusText = "WS failure",
+                            )
+                        }
                     }
                     WsEvent.Closed -> {
-                        _state.value = _state.value.copy(
-                            phase = RecordingPhase.DONE,
-                            statusText = "Closed",
-                        )
+                        if (_state.value.phase != RecordingPhase.NOTE_READY) {
+                            _state.value = _state.value.copy(
+                                phase = RecordingPhase.DONE,
+                                statusText = "Closed",
+                            )
+                        }
                     }
                     else -> Unit
                 }
@@ -128,7 +142,8 @@ class RecordController(private val scope: CoroutineScope) {
         streamer = null
         ws?.close()
         ws = null
-        _state.value = SessionState()
+        // Wipe all session data; flag the idle screen to confirm "Cleared".
+        _state.value = SessionState(statusText = "Cleared", justCleared = true)
     }
 }
 
