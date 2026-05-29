@@ -23,7 +23,6 @@ from medicscribe_server.ws.protocol import (
 
 if TYPE_CHECKING:
     from medicscribe_server.asr.base import ASREngine
-    from medicscribe_server.asr.vad import Endpointer
     from medicscribe_server.notes.generator import NoteGenerator
 
 logger = logging.getLogger(__name__)
@@ -44,14 +43,12 @@ class WSSession:
         audio_dir: Path,
         sample_rate: int = 16000,
         asr: ASREngine | None = None,
-        endpointer: Endpointer | None = None,
         note_generator: "NoteGenerator | None" = None,
     ) -> None:
         self.ws = ws
         self.audio_dir = audio_dir
         self.sample_rate = sample_rate
         self.asr = asr
-        self.endpointer = endpointer
         self.note_generator = note_generator
         self.phase: SessionPhase = SessionPhase.INIT
         self.writer: WavWriter | None = None
@@ -59,12 +56,16 @@ class WSSession:
         self.wav_path: Path | None = None
         self.transcript_lines: list[str] = []
         self.bytes_written = 0
+        # Batch-at-Stop: buffer the whole consult, transcribe once at Stop with
+        # full context. Per-utterance streaming made large-v3 hallucinate on tiny
+        # isolated chunks; the redesigned UI shows no live transcript anyway.
+        self._audio_buf = bytearray()
         # Serialize whisper calls — the engine is not safe under concurrent use.
         self._asr_lock = asyncio.Lock()
 
     @property
     def _transcribing(self) -> bool:
-        return self.asr is not None and self.endpointer is not None
+        return self.asr is not None
 
     async def run(self) -> None:
         try:
@@ -116,15 +117,9 @@ class WSSession:
             return
         self.writer.write(data)
         self.bytes_written += len(data)
+        # Buffer only — transcription happens once at Stop (see _on_stop).
         if self._transcribing:
-            self.endpointer.accept(data)
-            await self._drain_transcripts()
-
-    async def _drain_transcripts(self) -> None:
-        """Transcribe every completed utterance the endpointer has buffered."""
-        assert self.endpointer is not None and self.asr is not None
-        while (utt := self.endpointer.pop_utterance()) is not None:
-            await self._transcribe_and_send(utt)
+            self._audio_buf.extend(data)
 
     async def _transcribe_and_send(self, pcm: bytes) -> None:
         assert self.asr is not None
@@ -137,10 +132,11 @@ class WSSession:
             )
 
     async def _on_stop(self) -> None:
-        if self._transcribing and self.endpointer is not None:
-            tail = self.endpointer.flush()
-            if tail:
-                await self._transcribe_and_send(tail)
+        # Transcribe the entire buffered consult in one pass — full context,
+        # whisper's own VAD segments it (asr.yaml vad_filter: true).
+        if self._transcribing and self._audio_buf:
+            await self._transcribe_and_send(bytes(self._audio_buf))
+            self._audio_buf = bytearray()
         if self.writer is not None:
             duration = self.writer.duration_seconds()
             self.writer.close()
@@ -187,6 +183,9 @@ class WSSession:
             logger.exception("Failed to send error to client")
 
     def _finalize(self) -> None:
+        """Always-run cleanup (run() finally). Closes/deletes the WAV and wipes
+        all in-memory PHI — audio, transcript, note — so nothing outlives the
+        connection. PDPA: server keeps zero consultation data after the session."""
         if self.writer is not None:
             try:
                 self.writer.close()
@@ -194,3 +193,8 @@ class WSSession:
                 logger.exception("Failed to close writer in finalize")
             self.writer = None
         self._delete_wav()
+        # Explicit PHI wipe — do not rely on GC timing.
+        self._audio_buf = bytearray()
+        self.transcript_lines = []
+        self.bytes_written = 0
+        logger.info("Session %s purged (audio+transcript+note cleared)", self.session_id)

@@ -11,6 +11,17 @@ from medicscribe_server.ws import router as ws_router
 
 logger = logging.getLogger(__name__)
 
+# Surface medicscribe_server.* logs (session lifecycle + PDPA purge audit trail).
+# Without an explicit handler the app logger is silent (root has none under
+# uvicorn) and the "Session ... purged" audit line never appears.
+_app_logger = logging.getLogger("medicscribe_server")
+if not _app_logger.handlers:
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("%(levelname)s:    [%(name)s] %(message)s"))
+    _app_logger.addHandler(_h)
+    _app_logger.setLevel(logging.INFO)
+    _app_logger.propagate = False
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,13 +30,11 @@ async def lifespan(app: FastAPI):
     purge_recordings(settings.audio_dir, settings.recording_ttl_seconds)
 
     app.state.asr_engine = None
-    app.state.make_endpointer = None
     if settings.asr_enabled:
-        from medicscribe_server.asr.registry import build_asr, build_endpointer
+        from medicscribe_server.asr.registry import build_asr
 
         logger.info("Loading ASR model from %s ...", settings.asr_config_path)
         app.state.asr_engine = build_asr(settings.asr_config_path)
-        app.state.make_endpointer = lambda: build_endpointer(settings.asr_config_path)
         logger.info("ASR model ready")
     else:
         logger.info("ASR disabled (MEDICSCRIBE_ASR_ENABLED=false) — WAV-only mode")

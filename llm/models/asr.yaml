@@ -18,9 +18,10 @@ params:
   beam_size: 5
   best_of: 5
   temperature: 0.0
-  vad_filter: false           # Endpointer already does silero VAD upstream. Inner VAD here
-                              # is redundant AND on short utterances strips audio below the
-                              # language-detection minimum -> faster-whisper crashes.
+  vad_filter: true            # Batch-at-Stop: whole consult transcribed in one pass, so
+                              # whisper's own VAD segments the long audio. (Was false for the
+                              # old per-utterance streaming path where an upstream endpointer
+                              # did VAD; that path is retired.)
   vad_threshold: 0.5
   language: null              # null = auto-detect source lang; translate task then outputs English.
                               # Short-audio detect crash guarded in engine + vad_filter off.

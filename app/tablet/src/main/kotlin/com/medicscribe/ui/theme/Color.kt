@@ -2,7 +2,10 @@ package com.medicscribe.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val ScribePrimary = Color(0xFF0F766E)
-val ScribeOnPrimary = Color(0xFFFFFFFF)
-val ScribeBackground = Color(0xFFF8FAFC)
+val NavyPrimary = Color(0xFF1B2A6B)
+val NavyDark = Color(0xFF0A1540)
+val ScribeWhite = Color(0xFFFFFFFF)
+val ScribeSurface = Color(0xFFF0F4FF)
+val ScribeSurfaceVariant = Color(0xFFE1E8FF)
 val ScribeError = Color(0xFFB00020)
+val RecordRed = Color(0xFFCC0000)

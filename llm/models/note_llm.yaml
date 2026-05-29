@@ -4,6 +4,7 @@
 
 engine: llama-cpp             # llama-cpp-python OpenAI-compat server
 model_id: qwen2.5-14b-q4_k_m  # informational; llama-cpp ignores the model field
+model_file: /home/whity/llm_workflow/data/models/qwen2.5-14b-gguf/Qwen2.5-14B-Instruct-Q4_K_M.gguf
 revision: null
 
 # llama-cpp-python `python -m llama_cpp.server` on port 8000, no auth.

@@ -1,8 +1,10 @@
-"""Phase 2 wiring test: PCM stream -> endpointer -> ASR -> transcript_final.
+"""WS wiring test: PCM stream is buffered, then transcribed once at Stop.
 
-Uses stubs for the endpointer and ASR engine so it runs in milliseconds with no
-model download. Verifies the WS plumbing, not whisper quality (that is covered by
-the slow `test_asr_engine.py`).
+Batch-at-Stop architecture: the server no longer transcribes per-utterance while
+recording. It buffers the whole consult and makes a single ASR call at Stop (with
+whisper's own vad_filter segmenting the long audio). Uses a stub ASR so it runs in
+milliseconds with no model download; whisper quality is covered by the slow
+`test_asr_engine.py`.
 """
 
 import json
@@ -19,44 +21,33 @@ from medicscribe_server.ws import router as ws_router
 
 
 class StubASR:
+    """Records each transcribe() call so the test can prove batch-at-Stop:
+    one call, receiving the full buffered consult — not many small calls."""
+
+    def __init__(self) -> None:
+        self.call_sizes: list[int] = []
+
     def transcribe(self, pcm: bytes, sample_rate: int) -> list[Segment]:
+        self.call_sizes.append(len(pcm))
         return [Segment(text="hello world", lang="en", t0=0.0, t1=1.0)]
 
     def close(self) -> None:
         pass
 
 
-class StubEndpointer:
-    """Emits one utterance once it has seen >= threshold bytes; flush drains rest."""
-
-    def __init__(self, threshold_bytes: int = 16000) -> None:
-        self._threshold = threshold_bytes
-        self._buf = bytearray()
-        self._ready: list[bytes] = []
-
-    def accept(self, frame: bytes) -> None:
-        self._buf.extend(frame)
-        if len(self._buf) >= self._threshold:
-            self._ready.append(bytes(self._buf))
-            self._buf = bytearray()
-
-    def pop_utterance(self) -> bytes | None:
-        return self._ready.pop(0) if self._ready else None
-
-    def flush(self) -> bytes | None:
-        tail = bytes(self._buf) if self._buf else None
-        self._buf = bytearray()
-        return tail
+@pytest.fixture
+def stub_asr():
+    return StubASR()
 
 
 @pytest.fixture
-def transcribe_client(tmp_path, monkeypatch):
+def transcribe_client(tmp_path, monkeypatch, stub_asr):
     audio_dir = tmp_path / "audio"
     audio_dir.mkdir()
     monkeypatch.setattr(settings, "audio_dir", audio_dir)
     app = FastAPI()
-    app.state.asr_engine = StubASR()
-    app.state.make_endpointer = lambda: StubEndpointer()
+    app.state.asr_engine = stub_asr
+    app.state.note_generator = None
     app.include_router(ws_router.router)
     return TestClient(app)
 
@@ -67,8 +58,8 @@ def synthetic_pcm(seconds: float, freq: int = 440, sample_rate: int = 16000) -> 
     return struct.pack("<" + "h" * n, *samples)
 
 
-def test_ws_emits_transcript_final(transcribe_client):
-    pcm = synthetic_pcm(1.0)  # 32000 bytes -> >= one stub utterance + flushed tail
+def test_ws_buffers_then_transcribes_once_at_stop(transcribe_client, stub_asr):
+    pcm = synthetic_pcm(1.0)  # 32000 bytes
     finals = []
     with transcribe_client.websocket_connect("/ws/scribe") as ws:
         ws.send_text(json.dumps({"type": "start", "session_id": "t-asr-1"}))
@@ -76,6 +67,8 @@ def test_ws_emits_transcript_final(transcribe_client):
         frame_size = 640
         for i in range(0, len(pcm), frame_size):
             ws.send_bytes(pcm[i : i + frame_size])
+        # No transcription should have happened yet — audio is only buffered.
+        assert stub_asr.call_sizes == [], "ASR must not run mid-stream (batch-at-Stop)"
         ws.send_text(json.dumps({"type": "stop"}))
         # Drain server messages until it closes (bounded so a regression can't hang).
         for _ in range(50):
@@ -85,6 +78,11 @@ def test_ws_emits_transcript_final(transcribe_client):
                 break
             if msg["type"] == "transcript_final":
                 finals.append(msg)
+
+    # Exactly one ASR call, fed the entire buffered consult.
+    assert stub_asr.call_sizes == [len(pcm)], (
+        f"expected one batch call of {len(pcm)} bytes, got {stub_asr.call_sizes}"
+    )
     assert finals, "expected at least one transcript_final"
     assert finals[0]["text"] == "hello world"
     assert finals[0]["lang"] == "en"

@@ -1,3 +1,10 @@
+"""WS note flow: Stop -> batch transcribe -> note_done, WAV deleted (PDPA).
+
+Stubs ASR and the note generator so it runs without models. The note generator
+returns the sum_v1 text-wrapper shape ({soap_text: ...}) that the live llama-cpp
+path produces.
+"""
+
 import json
 import math
 import struct
@@ -18,27 +25,6 @@ class StubASR:
         pass
 
 
-class StubEndpointer:
-    def __init__(self, threshold_bytes=16000):
-        self._threshold = threshold_bytes
-        self._buf = bytearray()
-        self._ready = []
-
-    def accept(self, frame):
-        self._buf.extend(frame)
-        if len(self._buf) >= self._threshold:
-            self._ready.append(bytes(self._buf))
-            self._buf = bytearray()
-
-    def pop_utterance(self):
-        return self._ready.pop(0) if self._ready else None
-
-    def flush(self):
-        tail = bytes(self._buf) if self._buf else None
-        self._buf = bytearray()
-        return tail
-
-
 class StubNoteGen:
     def __init__(self, fail=False):
         self.fail = fail
@@ -49,8 +35,8 @@ class StubNoteGen:
         self.seen_transcript = transcript
         if self.fail:
             raise NoteGenerationError("boom")
-        return {"chief_complaint": "Fever", "subjective": {"history_of_present_illness": "fever"},
-                "assessment": [{"problem": "Viral fever"}], "plan": [{"action": "rest"}]}
+        # sum_v1 text-wrapper shape (matches the live path).
+        return {"soap_text": "S: Fever.\nO: Not documented.\nA: Viral fever.\nP: Rest."}
 
 
 def _pcm(seconds, sr=16000):
@@ -64,7 +50,6 @@ def _make_client(tmp_path, monkeypatch, note_gen):
     monkeypatch.setattr(settings, "audio_dir", audio_dir)
     app = FastAPI()
     app.state.asr_engine = StubASR()
-    app.state.make_endpointer = lambda: StubEndpointer()
     app.state.note_generator = note_gen
     app.include_router(ws_router.router)
     return TestClient(app), audio_dir
@@ -93,7 +78,7 @@ def test_stop_generates_note_and_deletes_wav(tmp_path, monkeypatch):
     messages = _run_session(client, "s-note-1")
     done = [m for m in messages if m["type"] == "note_done"]
     assert done, f"expected note_done, got {[m['type'] for m in messages]}"
-    assert done[0]["note"]["chief_complaint"] == "Fever"
+    assert done[0]["note"]["soap_text"].startswith("S: Fever")
     assert "I have a fever" in done[0]["raw_transcript"]
     assert "I have a fever" in gen.seen_transcript
     # PDPA: WAV deleted at stop
