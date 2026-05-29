@@ -37,7 +37,7 @@ import com.medicscribe.domain.RecordingPhase
 import com.medicscribe.domain.SessionState
 import com.medicscribe.ui.theme.InkBlack
 import com.medicscribe.ui.theme.NavyPrimary
-import com.medicscribe.ui.theme.RecordRed
+import com.medicscribe.ui.theme.RecordNavy
 import com.medicscribe.ui.theme.ScribeWhite
 import com.medicscribe.ui.theme.SoftWhite
 
@@ -92,7 +92,7 @@ fun RecordPage(
                     modifier = Modifier
                         .size(160.dp)
                         .clip(CircleShape)
-                        .background(if (busy) Color.Gray else RecordRed)
+                        .background(if (busy) Color.Gray else RecordNavy)
                         .border(3.dp, InkBlack, CircleShape)
                         .clickable(enabled = !busy) { onRecordClick() },
                     contentAlignment = Alignment.Center,

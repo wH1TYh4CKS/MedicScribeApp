@@ -15,3 +15,7 @@ val RecordRed = Color(0xFFCC0000)
 val SoftWhite = Color(0xFFF7F9FC)
 val InkBlack = Color(0xFF1A1A1A)
 val SafeGreen = Color(0xFF1B7A43)
+
+// Record button: a lighter navy shade (not red — red+white play read as YouTube).
+// Stays in the navy family, white icon keeps contrast.
+val RecordNavy = Color(0xFF3A5BC7)
