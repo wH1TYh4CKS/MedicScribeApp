@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 from pathlib import Path
+
 import yaml
+
 from medicscribe_server.asr.base import ASREngine
 from medicscribe_server.asr.faster_whisper_engine import FasterWhisperEngine
 
+
 def load_asr_config(config_path: Path) -> dict:
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 def build_asr(config_path: Path) -> ASREngine:

@@ -6,7 +6,9 @@ from medicscribe_server.llm_client.base import LLMClient, LLMError
 
 _DEFAULT_NOTE = {
     "chief_complaint": "Headache since this morning.",
-    "subjective": {"history_of_present_illness": "Patient reports headache since morning, no trauma."},
+    "subjective": {
+        "history_of_present_illness": "Patient reports headache since morning, no trauma.",
+    },
     "objective": {},
     "assessment": [{"problem": "Tension headache"}],
     "plan": [{"action": "Paracetamol 500mg PRN; review if persists."}],

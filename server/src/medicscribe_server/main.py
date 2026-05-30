@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -29,6 +30,11 @@ async def lifespan(app: FastAPI):
 
     purge_recordings(settings.audio_dir, settings.recording_ttl_seconds)
 
+    # Shared across all WS sessions — the ASR engine and note LLM below are single
+    # instances and must not be entered concurrently. Bound to this event loop here.
+    app.state.asr_lock = asyncio.Lock()
+    app.state.note_lock = asyncio.Lock()
+
     app.state.asr_engine = None
     if settings.asr_enabled:
         from medicscribe_server.asr.registry import build_asr
@@ -57,6 +63,8 @@ async def lifespan(app: FastAPI):
     finally:
         if app.state.asr_engine is not None:
             app.state.asr_engine.close()
+        if app.state.note_generator is not None:
+            app.state.note_generator.close()
 
 
 def create_app() -> FastAPI:

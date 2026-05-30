@@ -27,7 +27,7 @@ class NoteTemplate:
     _few_shot: list[dict]
 
     @classmethod
-    def load(cls, name: str, llm_root: Path) -> "NoteTemplate":
+    def load(cls, name: str, llm_root: Path) -> NoteTemplate:
         llm_root = Path(llm_root)
         tdir = llm_root / "templates" / name
         schema = json.loads((tdir / "output_schema.json").read_text(encoding="utf-8"))

@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Literal, Union
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -15,7 +15,7 @@ class StopMessage(BaseModel):
 
 
 ClientMessage = Annotated[
-    Union[StartMessage, StopMessage],
+    StartMessage | StopMessage,
     Field(discriminator="type"),
 ]
 
@@ -65,14 +65,12 @@ class ErrorMessage(BaseModel):
 
 
 ServerMessage = Annotated[
-    Union[
-        AckMessage,
-        TranscriptPartial,
-        TranscriptFinal,
-        AudioDeleted,
-        NoteProgress,
-        NoteDone,
-        ErrorMessage,
-    ],
+    AckMessage
+    | TranscriptPartial
+    | TranscriptFinal
+    | AudioDeleted
+    | NoteProgress
+    | NoteDone
+    | ErrorMessage,
     Field(discriminator="type"),
 ]

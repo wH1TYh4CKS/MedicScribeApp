@@ -26,6 +26,10 @@ class NoteGenerator:
         self._template = template
         self._max_retries = max_retries
 
+    def close(self) -> None:
+        """Release the underlying LLM client's resources. Called on app shutdown."""
+        self._client.close()
+
     def generate(self, transcript: str) -> dict:
         prompt, schema = self._template.render(transcript)
         last_error: Exception | None = None

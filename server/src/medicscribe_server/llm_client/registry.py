@@ -11,7 +11,7 @@ from medicscribe_server.llm_client.stub import StubLLMClient
 
 
 def load_note_config(config_path: Path) -> dict:
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 

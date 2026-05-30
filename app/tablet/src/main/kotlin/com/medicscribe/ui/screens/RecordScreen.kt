@@ -53,60 +53,7 @@ class RecordController(private val scope: CoroutineScope) {
                         client.send(ClientMessage.Start(sessionId = sid))
                         _state.value = _state.value.copy(statusText = "Sent start")
                     }
-                    is WsEvent.Message -> when (val m = ev.msg) {
-                        is ServerMessage.Ack -> {
-                            _state.value = _state.value.copy(
-                                phase = RecordingPhase.RECORDING,
-                                statusText = "Recording ${m.sessionId.take(8)}",
-                                recordingStartedAt = System.currentTimeMillis(),
-                            )
-                            streamer = PcmStreamer(capture, client).also { it.start(scope) }
-                        }
-                        is ServerMessage.AudioDeleted -> {
-                            // Server confirms the WAV is gone (PDPA). Stamp it for
-                            // the privacy receipt — real proof, not a claim.
-                            _state.value = _state.value.copy(
-                                audioDeletedAt = System.currentTimeMillis(),
-                            )
-                        }
-                        is ServerMessage.TranscriptFinal -> {
-                            _state.value = _state.value.copy(
-                                transcript = _state.value.transcript +
-                                    TranscriptLine(text = m.text, lang = m.lang),
-                            )
-                        }
-                        is ServerMessage.NoteProgress -> {
-                            _state.value = _state.value.copy(
-                                phase = RecordingPhase.GENERATING_NOTE,
-                                statusText = "${m.stage} ${m.pct}%",
-                            )
-                        }
-                        is ServerMessage.NoteDone -> {
-                            _state.value = _state.value.copy(
-                                phase = RecordingPhase.NOTE_READY,
-                                note = m.note,
-                                rawTranscript = m.rawTranscript,
-                                statusText = "Note ready",
-                                noteReadyAt = System.currentTimeMillis(),
-                            )
-                            // Note is in hand. Close the socket ourselves so OkHttp
-                            // stops pinging — otherwise a lagging server-side close
-                            // (e.g. over Tailscale) trips the 20s ping timeout and
-                            // would knock us off the note screen.
-                            streamer?.stop()
-                            streamer = null
-                            ws?.close()
-                            ws = null
-                        }
-                        is ServerMessage.ErrorMessage -> {
-                            _state.value = _state.value.copy(
-                                phase = RecordingPhase.ERROR,
-                                lastError = "${m.code}: ${m.message}",
-                                statusText = "Error",
-                            )
-                        }
-                        else -> Unit
-                    }
+                    is WsEvent.Message -> onServerMessage(ev.msg, client)
                     is WsEvent.Failure -> {
                         // Once the note is shown the socket is being torn down;
                         // ignore late failures/pings so the note screen survives.
@@ -131,6 +78,64 @@ class RecordController(private val scope: CoroutineScope) {
             }
         }
         client.connect()
+    }
+
+    /** Reduce one server message into session state. One branch per message type —
+     *  kept out of [start] so the connection loop stays readable and each case is
+     *  individually testable. */
+    private fun onServerMessage(m: ServerMessage, client: WsClient) {
+        when (m) {
+            is ServerMessage.Ack -> {
+                _state.value = _state.value.copy(
+                    phase = RecordingPhase.RECORDING,
+                    statusText = "Recording ${m.sessionId.take(8)}",
+                    recordingStartedAt = System.currentTimeMillis(),
+                )
+                streamer = PcmStreamer(capture, client).also { it.start(scope) }
+            }
+            is ServerMessage.AudioDeleted -> {
+                // Server confirms the WAV is gone (PDPA). Stamp it for the privacy
+                // receipt — real proof, not a claim.
+                _state.value = _state.value.copy(audioDeletedAt = System.currentTimeMillis())
+            }
+            is ServerMessage.TranscriptFinal -> {
+                _state.value = _state.value.copy(
+                    transcript = _state.value.transcript +
+                        TranscriptLine(text = m.text, lang = m.lang),
+                )
+            }
+            is ServerMessage.NoteProgress -> {
+                _state.value = _state.value.copy(
+                    phase = RecordingPhase.GENERATING_NOTE,
+                    statusText = "${m.stage} ${m.pct}%",
+                )
+            }
+            is ServerMessage.NoteDone -> {
+                _state.value = _state.value.copy(
+                    phase = RecordingPhase.NOTE_READY,
+                    note = m.note,
+                    rawTranscript = m.rawTranscript,
+                    statusText = "Note ready",
+                    noteReadyAt = System.currentTimeMillis(),
+                )
+                // Note is in hand. Close the socket ourselves so OkHttp stops
+                // pinging — otherwise a lagging server-side close (e.g. over
+                // Tailscale) trips the 20s ping timeout and would knock us off
+                // the note screen.
+                streamer?.stop()
+                streamer = null
+                ws?.close()
+                ws = null
+            }
+            is ServerMessage.ErrorMessage -> {
+                _state.value = _state.value.copy(
+                    phase = RecordingPhase.ERROR,
+                    lastError = "${m.code}: ${m.message}",
+                    statusText = "Error",
+                )
+            }
+            else -> Unit
+        }
     }
 
     fun stop() {

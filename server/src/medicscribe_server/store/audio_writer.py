@@ -2,6 +2,14 @@ import wave
 from pathlib import Path
 
 
+def read_wav_pcm(path: Path) -> bytes:
+    """Read all PCM frames from a WAV file as raw bytes (the same int16 stream that
+    was written). Used to transcribe a finished consult once, from disk, without
+    keeping a second copy of the audio in RAM during recording."""
+    with wave.open(str(path), "rb") as w:
+        return w.readframes(w.getnframes())
+
+
 class WavWriter:
     def __init__(
         self,

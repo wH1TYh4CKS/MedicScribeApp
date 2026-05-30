@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from medicscribe_server.store.audio_writer import WavWriter
+from medicscribe_server.store.audio_writer import WavWriter, read_wav_pcm
 from medicscribe_server.ws.protocol import (
     AckMessage,
     AudioDeleted,
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 _CLIENT_ADAPTER: TypeAdapter[ClientMessage] = TypeAdapter(ClientMessage)
 
 
-class SessionPhase(str, Enum):
+class SessionPhase(StrEnum):
     INIT = "init"
     RECORDING = "recording"
     STOPPED = "stopped"
@@ -44,7 +44,9 @@ class WSSession:
         audio_dir: Path,
         sample_rate: int = 16000,
         asr: ASREngine | None = None,
-        note_generator: "NoteGenerator | None" = None,
+        note_generator: NoteGenerator | None = None,
+        asr_lock: asyncio.Lock | None = None,
+        note_lock: asyncio.Lock | None = None,
     ) -> None:
         self.ws = ws
         self.audio_dir = audio_dir
@@ -57,12 +59,18 @@ class WSSession:
         self.wav_path: Path | None = None
         self.transcript_lines: list[str] = []
         self.bytes_written = 0
-        # Batch-at-Stop: buffer the whole consult, transcribe once at Stop with
-        # full context. Per-utterance streaming made large-v3 hallucinate on tiny
-        # isolated chunks; the redesigned UI shows no live transcript anyway.
-        self._audio_buf = bytearray()
+        # Batch-at-Stop: the whole consult is transcribed once at Stop with full
+        # context (read back from the on-disk WAV — see _on_stop). Per-utterance
+        # streaming made large-v3 hallucinate on tiny chunks, and the redesigned UI
+        # shows no live transcript, so we no longer hold a second copy of the audio
+        # in RAM.
         # Serialize whisper calls — the engine is not safe under concurrent use.
-        self._asr_lock = asyncio.Lock()
+        # The locks MUST be shared across sessions: the ASR engine and the note LLM
+        # are process-wide singletons, so a per-session lock would let two consults
+        # hit the same model at once. The router passes the shared locks; fall back
+        # to private ones only when nothing is wired (tests / WAV-only mode).
+        self._asr_lock = asr_lock or asyncio.Lock()
+        self._note_lock = note_lock or asyncio.Lock()
 
     @property
     def _transcribing(self) -> bool:
@@ -118,9 +126,8 @@ class WSSession:
             return
         self.writer.write(data)
         self.bytes_written += len(data)
-        # Buffer only — transcription happens once at Stop (see _on_stop).
-        if self._transcribing:
-            self._audio_buf.extend(data)
+        # No RAM buffer: the WAV on disk is the single copy; it is read back once
+        # at Stop for transcription (see _on_stop).
 
     async def _transcribe_and_send(self, pcm: bytes) -> None:
         assert self.asr is not None
@@ -133,11 +140,7 @@ class WSSession:
             )
 
     async def _on_stop(self) -> None:
-        # Transcribe the entire buffered consult in one pass — full context,
-        # whisper's own VAD segments it (asr.yaml vad_filter: true).
-        if self._transcribing and self._audio_buf:
-            await self._transcribe_and_send(bytes(self._audio_buf))
-            self._audio_buf = bytearray()
+        # Close + flush the WAV first so it can be read back for transcription.
         if self.writer is not None:
             duration = self.writer.duration_seconds()
             self.writer.close()
@@ -146,6 +149,12 @@ class WSSession:
                 "Session %s stopped. bytes=%d duration=%.2fs",
                 self.session_id, self.bytes_written, duration,
             )
+        # Transcribe the whole consult in one pass from the on-disk WAV — full
+        # context, whisper's own VAD segments it (asr.yaml vad_filter: true).
+        if self._transcribing and self.wav_path is not None and self.wav_path.exists():
+            pcm = read_wav_pcm(self.wav_path)
+            if pcm:
+                await self._transcribe_and_send(pcm)
         # PDPA: note-gen uses the transcript text, not the audio. Delete the WAV now.
         self._delete_wav()
         # Tell the client the audio is gone so the app can show a real, server-
@@ -169,7 +178,9 @@ class WSSession:
             return
         await self._send(NoteProgress(stage="generating", pct=50))
         try:
-            note = await asyncio.to_thread(self.note_generator.generate, transcript)
+            # Serialize note-gen too — the LLM client / GPU model is shared.
+            async with self._note_lock:
+                note = await asyncio.to_thread(self.note_generator.generate, transcript)
         except Exception as exc:  # NoteGenerationError and anything unexpected
             logger.warning("note generation failed for session %s: %s",
                            self.session_id, type(exc).__name__)
@@ -188,9 +199,11 @@ class WSSession:
             logger.exception("Failed to send error to client")
 
     def _finalize(self) -> None:
-        """Always-run cleanup (run() finally). Closes/deletes the WAV and wipes
-        all in-memory PHI — audio, transcript, note — so nothing outlives the
-        connection. PDPA: server keeps zero consultation data after the session."""
+        """Always-run cleanup (run() finally). Closes/deletes the WAV and wipes the
+        in-memory transcript so nothing outlives the connection. The note is never
+        stored on the session — it is streamed straight to the client — so there is
+        nothing else to wipe. PDPA: the server keeps zero consultation data after
+        the session ends."""
         if self.writer is not None:
             try:
                 self.writer.close()
@@ -199,7 +212,6 @@ class WSSession:
             self.writer = None
         self._delete_wav()
         # Explicit PHI wipe — do not rely on GC timing.
-        self._audio_buf = bytearray()
         self.transcript_lines = []
         self.bytes_written = 0
-        logger.info("Session %s purged (audio+transcript+note cleared)", self.session_id)
+        logger.info("Session %s purged (audio + transcript cleared)", self.session_id)

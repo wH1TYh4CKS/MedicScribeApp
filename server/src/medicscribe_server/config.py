@@ -26,7 +26,9 @@ class Settings(BaseSettings):
     # Note generation
     note_enabled: bool = True
     note_config_path: Path = Path("../llm/models/note_llm.yaml")
-    note_template: str = "sum_v1"   # text-wrapper schema ({soap_text: <raw S:/O:/A:/P:>}) matching note_llm.yaml response_text_field
+    # text-wrapper schema {soap_text: <raw S:/O:/A:/P:>}; matches the
+    # response_text_field in note_llm.yaml.
+    note_template: str = "sum_v1"
     llm_root: Path = Path("../llm")
 
     # Recording retention (PDPA): purge WAVs older than this on startup.

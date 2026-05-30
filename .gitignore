@@ -63,3 +63,6 @@ llm/models/*/
 
 # --- Graphify generated knowledge graph (regenerable from source) ---
 graphify-out/
+
+# Kotlin/Gradle daemon cache
+.kotlin/

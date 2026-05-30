@@ -17,3 +17,7 @@ class LLMClient(ABC):
         Raises LLMError on transport failure or unparseable output.
         """
         raise NotImplementedError
+
+    def close(self) -> None:  # noqa: B027  # optional hook, default no-op
+        """Release any held resources (connection pools, etc.). No-op by default;
+        override if the transport owns something. Called on app shutdown."""

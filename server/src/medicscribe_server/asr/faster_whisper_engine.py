@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import numpy as np
 from faster_whisper import WhisperModel
+
 from medicscribe_server.asr.base import ASREngine, Segment
 
 
 class FasterWhisperEngine(ASREngine):
-    def __init__(self, model_id: str, device: str = 'cuda', compute_type: str = 'float16', params: dict | None = None) -> None:
+    def __init__(
+        self,
+        model_id: str,
+        device: str = 'cuda',
+        compute_type: str = 'float16',
+        params: dict | None = None,
+    ) -> None:
         self._params = params or {}
         self.model = WhisperModel(model_id, device=device, compute_type=compute_type)
 
@@ -35,12 +42,14 @@ class FasterWhisperEngine(ASREngine):
             # faster-whisper auto-detect can still raise on degenerate audio.
             # Never let it kill the live WebSocket session.
             return []
-        
+
         result = []
         for s in segments:
             t = s.text.strip()
             if t:
-                result.append(Segment(text=t, lang=info.language, t0=float(s.start), t1=float(s.end)))
+                result.append(
+                    Segment(text=t, lang=info.language, t0=float(s.start), t1=float(s.end))
+                )
         return result
 
     def close(self) -> None:

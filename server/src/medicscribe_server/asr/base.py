@@ -26,5 +26,5 @@ class ASREngine(ABC):
     def transcribe(self, pcm: bytes, sample_rate: int) -> list[Segment]:
         """Transcribe one utterance. Returns [] for silence/no speech."""
 
-    def close(self) -> None:  # pragma: no cover - default no-op
+    def close(self) -> None:  # noqa: B027  # optional hook, default no-op
         """Release model resources. Override if the backend holds GPU memory."""
