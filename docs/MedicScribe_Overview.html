@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MedicScribe — Medical Transcription AI by Sunkarilabs</title>
+<style>
+  body { font-family: "Liberation Sans", Arial, sans-serif; color:#1a1a2e; line-height:1.5; font-size:11pt; }
+  .kicker { font-size:12pt; letter-spacing:3px; color:#5566c0; font-weight:bold; text-transform:uppercase; margin:0 0 2px 0; }
+  h1 { color:#1e2a78; font-size:30pt; margin:0; }
+  .sub { color:#3a3a55; font-size:13pt; font-weight:bold; margin:4px 0 2px 0; }
+  .by { color:#555; font-size:11pt; margin:0 0 8px 0; }
+  .pillars { color:#1e2a78; font-weight:bold; font-size:10.5pt; letter-spacing:1px; margin:0 0 16px 0; border-top:1px solid #cfd5ea; border-bottom:1px solid #cfd5ea; padding:6px 0; }
+  h2 { color:#1e2a78; font-size:15pt; border-bottom:2px solid #1e2a78; padding-bottom:3px; margin:0 0 10px 0; }
+  h3 { color:#2a3a90; font-size:12pt; margin:12px 0 2px 0; }
+  .sec { page-break-inside:avoid; margin-bottom:20px; }
+  .cat { page-break-inside:avoid; margin-bottom:12px; }
+  .lede p { margin:5px 0; }
+  blockquote { background:#eef1fb; border-left:4px solid #1e2a78; margin:12px 0; padding:8px 14px; page-break-inside:avoid; }
+  table.data { border-collapse:collapse; width:100%; table-layout:fixed; margin:10px 0 12px 0; font-size:9pt; page-break-inside:avoid; }
+  table.data th, table.data td { border:1px solid #bcc4e0; padding:5px 7px; vertical-align:top; text-align:left; line-height:1.3; }
+  table.data th { background:#1e2a78; color:#fff; }
+  table.data td.k { background:#eef1fb; font-weight:bold; }
+  table.shots { width:auto; margin:10px 0; page-break-inside:avoid; }
+  table.shots td { border:0; text-align:center; vertical-align:top; padding:4px 13px 12px 0; }
+  table.shots img { border:1px solid #cfd5ea; }
+  .cap { font-size:8.5pt; color:#444; margin-top:5px; width:150px; }
+  .badge { background:#1e2a78; color:#fff; font-size:7.5pt; font-weight:bold; padding:1px 6px; border-radius:8px; }
+  .price { color:#1e2a78; font-weight:bold; font-size:10.5pt; margin:4px 0 0 0; }
+  hr { border:0; border-top:1px solid #d4d9ec; margin:18px 0; }
+  .foot { color:#555; font-style:italic; font-size:9.5pt; }
+  ul, ol { margin:6px 0; }
+  li { margin:3px 0; }
+</style>
+</head>
+<body>
+
+<div class="sec">
+<p class="kicker">Medical Transcription AI</p>
+<h1>MedicScribe</h1>
+<p class="sub">A private medical scribe for Malaysian clinics</p>
+<p class="by">by <b>Sunkarilabs</b></p>
+<p class="pillars">Data Sovereignty &nbsp;·&nbsp; Zero-Cloud Liability &nbsp;·&nbsp; Specialized Medical Intelligence</p>
+
+<div class="lede">
+<p><b>What it is:</b> a tool that listens to your consultation and writes a structured clinical note for you to review, edit, and export — so you spend the visit with the patient, not the keyboard.</p>
+<p><b>Status:</b> working and field-tested today. The screenshots in this document are from the live app.</p>
+<p><b>The promise:</b> your patients' data is <b>sovereign</b> — it stays on hardware you control and never touches the cloud. No third party ever holds, sees, or could leak it.</p>
+<p><b>How it is delivered:</b> a sealed, headless "black box" AI server that runs on its own — locked down, with nothing to manage and nothing to tinker with.</p>
+</div>
+</div>
+
+<div class="sec">
+<h2>1. What it does today</h2>
+<p>You press one button at the start of the consultation and one button at the end. About a few seconds after you stop, a clean SOAP note appears on your screen. You read it, fix anything you want, and share or export it.</p>
+<p>The app is built on speech-recognition models tuned for Malaysian multilingual consultations — it handles English, Malay, Mandarin and Tamil, plus local <b>dialects and everyday slang (Manglish)</b>, including switching between them in the same sentence — and still produces an <b>English</b> note.</p>
+
+<table class="shots">
+<tr>
+  <td><img src="assets/sm_StartScreen1.jpeg" width="132" height="260"><div class="cap"><b>1. Start</b> — one button, and a banner reminding you the data is private, not the cloud.</div></td>
+  <td><img src="assets/sm_StopScreen.jpeg" width="132" height="286"><div class="cap"><b>2. Recording</b> — the button becomes Stop. Nothing else to manage.</div></td>
+  <td><img src="assets/sm_SOAPnote.jpeg" width="132" height="286"><div class="cap"><b>3. The note</b> — a ready SOAP note you can edit and Share.</div></td>
+  <td><img src="assets/sm_Privacynote.jpeg" width="132" height="286"><div class="cap"><b>4. Privacy trail</b> — proof of exactly what happened to the data.</div></td>
+</tr>
+</table>
+
+<p>In the real example above, the system captured the patient's complaint and a detailed medication plan from a two-minute conversation, and the note was ready a few seconds after Stop. The privacy trail shows the audio was <b>deleted on the server</b>, the note is <b>export-only — never stored</b>, and everything is <b>wiped when you tap Done</b>.</p>
+</div>
+
+<div class="sec">
+<h2>2. How it works (in plain terms)</h2>
+<p>The phone or tablet does <b>not</b> do the thinking. It only records your voice and shows you the result. The actual work is done by two AI models running on a separate computer — the <b>server</b>:</p>
+<ol>
+<li><b>You record</b> — the app captures the consultation audio.</li>
+<li><b>Speech → text</b> — the first model turns the spoken consultation into written text, translating any mix of languages into English along the way.</li>
+<li><b>Text → note</b> — the second model reads that text and organises it into a structured SOAP note.</li>
+<li><b>You review</b> — the note returns to your screen to edit, share, and export.</li>
+</ol>
+<p>Two buttons for you. Two models doing the work behind the scenes.</p>
+</div>
+
+<div class="sec">
+<h2>3. Data Sovereignty — why it never touches the cloud</h2>
+<p>Most medical scribes on the market send the recording to a company's servers on the internet. For patient data, that is a permanent liability. MedicScribe runs on <b>one dedicated machine you control</b> — either a private Sunkarilabs server (evaluation) or a sealed server installed in your own clinic.</p>
+<ul>
+<li><b>Data sovereignty:</b> the audio and the note live only on your hardware. No cloud account, no foreign data centre, no vendor holding your records.</li>
+<li><b>Zero-cloud liability:</b> nothing leaves the building, so there is no cloud breach surface to be liable for. This can be guaranteed contractually (see the PDPA Audit Trail add-on).</li>
+<li><b>Offline by design:</b> a clinic server keeps working even if your internet is down.</li>
+<li><b>No lock-in:</b> built on open-source models — no per-record cloud fees, no subscription you can't leave.</li>
+</ul>
+</div>
+
+<div class="sec">
+<h2>4. Why the hardware matters (and why a bigger one costs more)</h2>
+<p>The AI models run on a <b>graphics card (GPU)</b> inside the server. This single component decides how good and how fast the notes are:</p>
+<ul>
+<li>A GPU has a <b>fixed amount of working memory</b> — think of it as a fixed-size desk. Each model must fit entirely on that desk to run <b>at all</b>. If a model is bigger than the desk, it will not start.</li>
+<li>A <b>smarter, more accurate model is also a bigger model</b>, so it needs a <b>bigger desk</b> (more GPU memory).</li>
+<li><b>More doctors recording at once</b> means more jobs sharing the desk — again, more room needed.</li>
+</ul>
+<p>This is why the on-site standard uses a <b>24 GB GPU</b> for 1–2 doctors, and the multi-doctor tier uses a multi-GPU architecture for 3–5 doctors running in parallel.</p>
+<blockquote><b>Higher accuracy or more doctors → a bigger GPU → higher hardware cost.</b> Hardware is the lower-cost lever; bespoke model work is the premium one. We size the hardware to the clinic.</blockquote>
+</div>
+
+<div class="sec">
+<h2>5. A sealed "black box" — reliability, SLA &amp; uptime</h2>
+<p>The server is delivered <b>headless</b> — no screen, no desktop, nothing on it to open or change. Everything runs automatically inside the box. This is deliberate:</p>
+<ul>
+<li><b>All the graphics-card memory goes to the models.</b> A screen or desktop on the server would quietly use part of that same memory; on a smaller server that can be enough to tip it over and stop a note from running. Headless keeps every bit of the card free for making notes.</li>
+<li><b>Full, exclusive control of the card.</b> Nothing else runs, so no stray program competes for memory and interrupts a note.</li>
+<li><b>No tinkering, no leaks.</b> Nothing for anyone to fiddle with, mis-configure, or copy data out of. A sealed system is a safe system.</li>
+<li><b>Engineered for uptime.</b> Because the system is locked down with no software clutter, it needs virtually zero manual maintenance — built for <b>99.9% uptime</b>.</li>
+</ul>
+<p><b>If it ever does fail, you lose nothing.</b> Notes are export-only and nothing is half-saved, so there is no data to lose — you simply resume the moment the server is back.</p>
+<p><b>Support &amp; SLA:</b> your monthly licence is a direct line to the engineer who built the system — not a call-centre queue. Issues are attended to personally, on weekends included. For on-site clinics, an optional <b>Cold-Swap hardware SLA</b> guarantees a physical replacement server within 24 hours (see add-ons).</p>
+</div>
+
+<div class="sec">
+<h2>6. Packages &amp; pricing</h2>
+<p>Three tiers, from a low-commitment pilot to a multi-doctor clinic deployment. All figures are in Malaysian Ringgit and confirmed against the final specification at quotation.</p>
+<table class="data">
+<tr><th width="23%">Tier</th><th width="49%">What is included</th><th width="28%">Rate (MYR)</th></tr>
+<tr>
+  <td class="k">1. Private Cloud Evaluation</td>
+  <td>A secure, encrypted private link to a dedicated Sunkarilabs server. Strictly a <b>single-doctor pilot, 3 months maximum</b> — to prove the value before committing to on-site hardware.</td>
+  <td><b>RM 1,500 / month</b><br>+ RM 3,000 one-time setup</td>
+</tr>
+<tr>
+  <td class="k">2. Local On-Site "Black Box" &nbsp;<span class="badge">RECOMMENDED</span></td>
+  <td>A sealed, headless AI server <b>physically installed inside your clinic</b>. 100% offline — zero internet or cloud reliance. Supports <b>1–2 doctors</b>. The enterprise standard.</td>
+  <td><b>RM 15,000</b> hardware (one-time)<br>+ RM 5,000 installation<br>+ RM 650 / month licence &amp; SLA</td>
+</tr>
+<tr>
+  <td class="k">3. Multi-Doctor Clinic</td>
+  <td>A high-spec <b>multi-GPU server</b> built to run heavy parallel inference for <b>3–5 doctors simultaneously</b>, fully on-site and offline.</td>
+  <td><b>RM 28,000</b> hardware (one-time)<br>+ RM 8,000 installation<br>+ RM 1,200 / month licence &amp; SLA</td>
+</tr>
+</table>
+<p class="foot">The monthly licence &amp; SLA is your retainer: priority access to the engineer who built the system, software updates, and the reliability guarantee — not a charge for "updates" alone.</p>
+</div>
+
+<div class="sec">
+<h2>7. Premium add-ons</h2>
+<p>These extend the platform with specialised execution that generic, mass-market AI tools cannot provide.</p>
+
+<div class="cat">
+<h3>A · Specialty Vocabulary Tuning — Specialized Medical Intelligence</h3>
+<p>Off-the-shelf AI models fail at specific clinical jargon. We custom-tune the underlying language models for your medical branch's focus. <i>Example — Aesthetic &amp; Dermatology Pack:</i> custom weights trained to recognise laser types (Picosecond, Q-Switched Nd:YAG), conditions (Melasma, Post-Inflammatory Hyperpigmentation), and premium skincare brand names.</p>
+<p class="price">From RM 12,000 one-time, per specialised model.</p>
+</div>
+
+<div class="cat">
+<h3>B · Premium Hardware &amp; Hardware SLA</h3>
+<p><b>Black-Box + Mic Bundle:</b> a medical-grade, highly sensitive directional wireless microphone paired with a custom-anodised, silent mini-ITX server chassis — sleek on a clinic counter, and it eliminates tablet-microphone distortion.</p>
+<p class="price">RM 3,500 per consultation room.</p>
+<p><b>Cold-Swap Guarantee (Hardware SLA):</b> if an on-site server hits a hardware fault, Sunkarilabs physically delivers and swaps a temporary replacement server within <b>24 hours, weekends included</b>.</p>
+<p class="price">+ RM 250 / month on the base maintenance tier.</p>
+</div>
+
+<div class="cat">
+<h3>C · Compliance &amp; Custom Integration</h3>
+<p><b>PDPA Enterprise Audit Trail:</b> a signed compliance certificate and a localised cryptographic logging system that proves no patient audio or text was retained on-site or leaked.</p>
+<p class="price">Included in Tier 2 &amp; 3 · RM 2,000 one-time for Tier 1.</p>
+<p><b>Custom EMR / CMS Webhook Integration:</b> a secure local API endpoint that pushes generated SOAP notes straight into your clinic's existing medical-records software with one click.</p>
+<p class="price">From RM 5,000, quoted on your software's complexity.</p>
+</div>
+</div>
+
+<div class="sec">
+<h2>8. iPad and Android — which device</h2>
+<p>The app can be supplied on <b>both an iPad and an Android tablet</b>. They differ only in how soon each is ready:</p>
+<ul>
+<li><b>Android:</b> ready now — this is the field-tested app in the screenshots.</li>
+<li><b>iPad / iPhone (iOS):</b> needs additional development time, because Apple's App Store rules are strict. The practical route is to run MedicScribe as a <b>secure local web app (HTTPS)</b> served by your own clinic server and opened in the iPad's browser — no App Store needed.</li>
+</ul>
+<p>For the iPad/iPhone route to be trusted and encrypted, each device needs a small <b>security certificate ("CA") installed once</b>. After that one-time step it behaves like a normal app, and stays <b>fully local — still no cloud</b>. The iPad is only the <i>recorder</i>; the AI work happens on the server either way. App layout changes and the iOS build are delivered as a quoted app-design upgrade.</p>
+</div>
+
+<div class="sec">
+<h2>9. Privacy, compliance &amp; PDPA</h2>
+<ul>
+<li><b>No cloud.</b> Audio and notes stay on hardware you control — full data sovereignty.</li>
+<li><b>Sealed server.</b> Headless and locked down — nothing to tinker with, nothing to leak.</li>
+<li><b>Zero data retention</b> — the server only runs the models and transcribes; nothing is kept. Guaranteed by contract, provable with the PDPA Enterprise Audit Trail.</li>
+<li><b>Audio deleted</b> on the server right after the note is generated (the app shows the confirmation).</li>
+<li><b>Notes are export-only</b> — never stored on the server.</li>
+<li><b>Everything wiped</b> when you tap Done, with an on-screen audit trail each time.</li>
+<li><b>No data loss</b> if the server ever fails — nothing is half-saved; just resume.</li>
+<li><b>Built for Malaysia's PDPA 2010</b> — open-source models, no lock-in, no per-record cloud fees.</li>
+</ul>
+</div>
+
+<div class="sec">
+<h2>Get in touch</h2>
+<p><b>Surenther Saravanan</b> — Sunkarilabs<br>
+Phone / WhatsApp: <b>014-635 7916</b><br>
+Email: <b>surenthersaravanan@gmail.com</b></p>
+</div>
+
+<hr>
+<p class="foot">MedicScribe by Sunkarilabs — Data Sovereignty · Zero-Cloud Liability · Specialized Medical Intelligence.</p>
+
+</body>
+</html>
