@@ -1,0 +1,37 @@
+{
+  "transcript": "Doctor: Good morning, what brings you in today?\nPatient: Morning doctor, I've had a sore throat for about three days, and a low fever since yesterday.\nDoctor: Any cough or runny nose?\nPatient: Mild cough, no runny nose. Throat hurts when I swallow.\nDoctor: Any difficulty breathing?\nPatient: No.\nDoctor: Let me have a look. Open your mouth wide. Okay, your tonsils are red but no exudate. Temp is 37.8, BP 118/76. I think this is viral pharyngitis. Take paracetamol 500mg up to four times a day for the fever and throat pain, and lozenges as needed. Drink lots of water. If symptoms get worse or you develop high fever above 39, come back. Otherwise review in three days if not better.",
+  "note_json": {
+    "chief_complaint": "Sore throat for 3 days with low fever since yesterday",
+    "subjective": {
+      "history_of_present_illness": "Patient reports a sore throat of three days' duration, with onset of low-grade fever yesterday. Mild cough present, no rhinorrhoea. Throat pain worse on swallowing. No dyspnoea.",
+      "past_medical_history": "",
+      "social_history": "",
+      "family_history": "",
+      "review_of_systems": "Negative for dyspnoea, rhinorrhoea, ear pain."
+    },
+    "objective": {
+      "vitals": "BP 118/76, T 37.8",
+      "physical_exam": "Tonsils erythematous, no exudate.",
+      "investigations": ""
+    },
+    "assessment": [
+      {
+        "problem": "Acute viral pharyngitis",
+        "differential": "Bacterial tonsillitis (less likely given no exudate)",
+        "icd10": "J02.9"
+      }
+    ],
+    "plan": [
+      { "action": "Symptomatic relief with paracetamol and lozenges", "rationale": "Viral aetiology suspected, no antibiotics indicated" },
+      { "action": "Adequate hydration", "rationale": "Supportive care" },
+      { "action": "Review in 3 days if not improving", "rationale": "Safety net" },
+      { "action": "Return immediately if fever > 39 °C or worsening symptoms", "rationale": "Red flag review" }
+    ],
+    "medications": [
+      { "name": "Paracetamol", "dose": "500 mg", "frequency": "QID PRN", "duration": "PRN", "route": "PO", "instructions": "For fever and throat pain" },
+      { "name": "Throat lozenges", "dose": "1 lozenge", "frequency": "PRN", "duration": "PRN", "route": "PO", "instructions": "As needed for throat pain" }
+    ],
+    "allergies": [],
+    "follow_up": "Review in 3 days if not improving; return immediately if T > 39 °C or worsening."
+  }
+}

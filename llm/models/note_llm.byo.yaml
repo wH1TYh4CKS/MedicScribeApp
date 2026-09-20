@@ -1,0 +1,37 @@
+# Bring-your-own note LLM — the container default.
+#
+# MedicScribe ships no weights. Point this at any OpenAI-compatible endpoint
+# (vLLM, llama.cpp, Ollama, or a hosted API) and it will generate notes.
+#
+# Everything here is overridable from the environment, which is how the
+# container is configured:
+#
+#   MEDICSCRIBE_NOTE_ENDPOINT=http://host.docker.internal:8000/v1
+#   MEDICSCRIBE_NOTE_MODEL=Qwen/Qwen3.8-27B
+#   MEDICSCRIBE_NOTE_API_KEY=...        # omit if your server has no auth
+#
+# The tuned production profile, with the vLLM launch knobs and the reasoning
+# behind each parameter, is note_llm.yaml.
+
+engine: openai-compat
+model_id: Qwen/Qwen3.8-27B
+model_dir: null
+revision: null
+
+endpoint: http://host.docker.internal:8000/v1
+api_key: null                 # set MEDICSCRIBE_NOTE_API_KEY instead
+timeout_seconds: 90
+
+# The model emits raw text (S: ... O: ... A: ... P: ...); wrap it as
+# {soap_text: <raw>} rather than asking for JSON.
+response_text_field: soap_text
+
+params:
+  max_tokens: 1536
+  temperature: 0.0            # greedy: minimise invention in a clinical note
+  top_p: 1.0
+  repetition_penalty: 1.05    # greedy alone degenerates on long noisy transcripts
+
+guided_decoding:
+  enabled: false
+  backend: null

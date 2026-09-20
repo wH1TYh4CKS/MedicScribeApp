@@ -1,0 +1,67 @@
+# ASR model registry — read at server boot
+# Swap engine/model here, restart server, no code change.
+# Schema validated by server/src/medicscribe_server/asr/registry.py.
+
+engine: faster-whisper        # one of: faster-whisper | openai-whisper | whisperx
+# Stock Whisper large-v3 + task=translate. Product output = ENGLISH doctor notes, so we
+# translate-at-ASR: any spoken lang (MS/EN/ZH/TA/Manglish) -> English in one pass. No model
+# routing, no language picker. Tested: large-v3 translate gives clean English for Mandarin,
+# Malay, and Manglish. The Malaysian fine-tune was REJECTED here — its translate task leaves
+# Malay untranslated, and it cannot emit Mandarin Hanzi (it forces EN/MS). Kept on disk at
+# ct2-malaysian-whisper-turbo-v3/ + asr.malaysian.yaml in case native-script display is ever needed.
+model_id: large-v3
+revision: null                # optional pin (e.g. "v20240930")
+device: cuda                  # cuda | cpu | mps
+compute_type: float16         # TIER KNOB: float16 (premium) | int8_float16 (standard) | int8 (budget)
+
+params:
+  beam_size: 5
+  best_of: 5
+  temperature: 0.0
+  vad_filter: true            # Batch-at-Stop: whole consult transcribed in one pass, so
+                              # whisper's own VAD segments the long audio. (Was false for the
+                              # old per-utterance streaming path where an upstream endpointer
+                              # did VAD; that path is retired.)
+  vad_threshold: 0.5
+  language: null              # null = auto-detect source lang; translate task then outputs English.
+                              # Short-audio detect crash guarded in engine + vad_filter off.
+  # Auto-detect is NOT free: whisper reads one 30s window, picks a language, and
+  # locks the ENTIRE recording to it. On a real 22-min Mandarin dermatology consult
+  # it chose Malay at p=0.62 and emitted Malay prose for the whole file (a 43-min
+  # Malaysian-accented ENGLISH meeting went the same way, p=0.71) -- silently, with
+  # no error. These two keys make it scan up to 8 windows (~4 min) and accept a
+  # guess only above the threshold, majority-voting if none clears it.
+  # BOTH are required: with no threshold the detect loop breaks on the first
+  # window and language_detection_segments does nothing (faster_whisper/transcribe.py).
+  # MEASURED on the two real recordings (large-v3, CPU int8, same audio):
+  #   Mandarin derm consult   old ms p=0.55 -> new zh p=0.91   FIXED
+  #   accented ENGLISH mtg    old ms p=0.67 -> new ms p=0.91   STILL WRONG
+  #   testdata/consult.wav    old en p=0.65 -> new en p=0.72   no regression
+  # So this fixes low-confidence first-window misdetects, NOT the case where
+  # whisper is confidently wrong: it hears Malaysian-accented English as Malay
+  # and more scanning just finds a more confident wrong window. Under
+  # task: translate that still yields English, so it degrades quality rather
+  # than destroying the note -- the destructive case was task: transcribe.
+  # Real fixes for that: an explicit language hint from the client, or
+  # faster-whisper >= 1.1 per-utterance detection (`multilingual=True`);
+  # installed here is 1.0.3. Still one language per consult either way.
+  language_detection_segments: 8
+  language_detection_threshold: 0.7
+  task: translate             # translate (-> English, product default) | transcribe (native script)
+  condition_on_previous_text: false   # stop large-v3 repetition loops on longer utterances
+  initial_prompt: null        # DELIBERATELY null. A medical prompt made noise-hallucinations
+                              # sound clinically real ("...give you a prescription") with ~zero
+                              # gain on real speech. Without it, noise hallucinations are obvious
+                              # non-clinical garbage. silero VAD (Endpointer) gates noise anyway;
+                              # the note-LLM handles drug-name/clinical normalization.
+
+streaming:
+  window_seconds: 5
+  hop_seconds: 1
+  max_buffer_seconds: 30
+
+vad:
+  engine: silero              # silero | webrtc | none
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500

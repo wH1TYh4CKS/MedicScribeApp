@@ -1,0 +1,43 @@
+# MedicScribe server — app only, CPU ASR, bring your own note LLM.
+#
+#   MEDICSCRIBE_NOTE_ENDPOINT=http://host.docker.internal:8000/v1 docker compose up --build
+#   then open http://localhost:8080
+#
+# This is the "try it" path. It runs Whisper on CPU with a small model and
+# delegates note generation to an OpenAI-compatible endpoint you provide.
+#
+# The production path is a 4-GPU box: Whisper large-v3 on CUDA plus vLLM
+# serving Qwen3.8-27B at TP=4, started bare-metal by scripts/start-all.sh.
+# That does not fit in a container and is not meant to — see README.
+
+services:
+  server:
+    build: ./server
+    image: medicscribe-server:local
+    container_name: medicscribe-server
+    ports:
+      - "8080:8080"
+    volumes:
+      # Runtime dir: audio is written here and unlinked at Stop. Never persisted.
+      - ./data:/app/data
+      # Model registry yaml + prompt templates.
+      - ./llm:/llm:ro
+      # Whisper weights land here instead of re-downloading on every recreate.
+      - medicscribe-cache:/cache/huggingface
+    environment:
+      MEDICSCRIBE_HOST: "0.0.0.0"
+      MEDICSCRIBE_PORT: "8080"
+      MEDICSCRIBE_LLM_ROOT: "/llm"
+      MEDICSCRIBE_ASR_CONFIG_PATH: "/llm/models/asr.container.yaml"
+      MEDICSCRIBE_NOTE_CONFIG_PATH: "/llm/models/note_llm.byo.yaml"
+      # Your OpenAI-compatible endpoint. A server on the host is
+      # host.docker.internal from in here, not localhost.
+      MEDICSCRIBE_NOTE_ENDPOINT: "${MEDICSCRIBE_NOTE_ENDPOINT:-http://host.docker.internal:8000/v1}"
+      MEDICSCRIBE_NOTE_MODEL: "${MEDICSCRIBE_NOTE_MODEL:-Qwen/Qwen3.8-27B}"
+      MEDICSCRIBE_NOTE_API_KEY: "${MEDICSCRIBE_NOTE_API_KEY:-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  medicscribe-cache:

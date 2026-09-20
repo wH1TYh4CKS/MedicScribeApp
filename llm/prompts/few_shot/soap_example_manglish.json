@@ -1,0 +1,36 @@
+{
+  "transcript": "Doctor: Hi auntie, apa khabar, what's wrong today?\nPatient: Doctor ah, my anak this one, he got demam already three days lah. Last night very panas, almost 39 degree.\nDoctor: I see. Got batuk or runny nose?\nPatient: Got batuk berkahak, sikit-sikit. Runny nose also got, since yesterday lor.\nDoctor: He still drink water and eat normal?\nPatient: Eat very less, drink can lah. Pee also kurang.\nDoctor: Any vomit or cirit-birit?\nPatient: No no, just demam and batuk.\nDoctor: Okay let me check. Temp now 38.5, throat a bit red, lungs clear. Looks like viral upper respiratory infection. I give paracetamol syrup, 5ml every 6 hours kalau demam. Banyak minum air. If demam more than 39 or anak become very lemah or sesak, must come back straight away or go A&E. Review in three days if not better.",
+  "note_json": {
+    "chief_complaint": "Anak demam 3/7 with batuk and rhinorrhoea",
+    "subjective": {
+      "history_of_present_illness": "Mother reports child has had fever for three days, with peak temperature near 39 °C overnight. Productive cough (\"batuk berkahak\") in small amounts. Rhinorrhoea since yesterday. Reduced appetite, oral intake of fluids maintained. Reduced urine output noted by mother. No vomiting, no diarrhoea.",
+      "past_medical_history": "",
+      "social_history": "",
+      "family_history": "",
+      "review_of_systems": "Negative for vomiting, diarrhoea, dyspnoea."
+    },
+    "objective": {
+      "vitals": "T 38.5",
+      "physical_exam": "Throat mildly erythematous. Chest clear on auscultation.",
+      "investigations": ""
+    },
+    "assessment": [
+      {
+        "problem": "Acute viral upper respiratory tract infection in a child",
+        "differential": "Early lower respiratory tract infection if symptoms progress",
+        "icd10": "J06.9"
+      }
+    ],
+    "plan": [
+      { "action": "Paracetamol syrup for fever", "rationale": "Symptomatic relief" },
+      { "action": "Encourage oral fluid intake", "rationale": "Avoid dehydration given reduced urine output" },
+      { "action": "Review in 3 days if not improving", "rationale": "Safety net" },
+      { "action": "Return immediately if T > 39 °C, lethargy, or respiratory distress", "rationale": "Red flag review" }
+    ],
+    "medications": [
+      { "name": "Paracetamol syrup", "dose": "5 ml", "frequency": "every 6 hours PRN", "duration": "PRN", "route": "PO", "instructions": "Only if fever" }
+    ],
+    "allergies": [],
+    "follow_up": "Review in 3 days if not improving; return / A&E immediately if fever > 39 °C, lethargy, or respiratory distress."
+  }
+}

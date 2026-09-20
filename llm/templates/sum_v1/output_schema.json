@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "medicscribe.sum_v1",
+  "title": "Sum Small SOAP text wrapper",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["soap_text"],
+  "properties": {
+    "soap_text": {
+      "type": "string",
+      "description": "Raw SOAP note in 'S: ... O: ... A: ... P: ...' format as emitted by sum-small. The doctor verifies and edits; structured parsing is deferred to a post-processor."
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "medicscribe.custom.example",
+  "title": "Example Custom Template",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chief_complaint", "notes"],
+  "properties": {
+    "chief_complaint": { "type": "string" },
+    "notes": { "type": "string" }
+  }
+}

@@ -1,0 +1,82 @@
+# --- Runtime data (PHI risk — never commit) ---
+# Ignore everything under data/ except .gitkeep markers, so the dir tree
+# survives a clone but no audio / transcripts / notes ever land in git.
+data/**
+!data/**/
+!data/**/.gitkeep
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.opus
+*.mp4
+# Bake-off inputs + outputs hold real-consult audio/transcripts/notes — PHI, never commit.
+/testdata/
+/llm/eval/bakeoff/
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+hf_token*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# --- Android / Gradle ---
+.gradle/
+local.properties
+*.iml
+.idea/
+build/
+captures/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# --- IDE / OS ---
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Claude Code personal overrides (project settings.json IS committed) ---
+.claude/settings.local.json
+
+# --- Models (download separately, don't commit weights) ---
+# Ignore weight subdirs under llm/models/ (ct2-*, hf snapshots, etc.) but keep
+# small *.yaml engine configs and README.md at the top of llm/models/ tracked.
+llm/models/*/
+*.bin
+*.safetensors
+*.gguf
+*.ct2
+
+# --- Graphify generated knowledge graph (regenerable from source) ---
+graphify-out/
+
+# Kotlin/Gradle daemon cache
+.kotlin/
+
+# Build/scratch output
+/docs/out2/
+
+# Server-side runtime data (audio tmpfs, feedback JSONL) — PHI risk.
+# The data/** rule above is root-anchored and does NOT cover this path.
+/server/data/
+
+# Design-critique snapshots (local working notes, regenerated on demand)
+/.impeccable/

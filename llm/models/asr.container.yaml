@@ -1,0 +1,39 @@
+# Container ASR default — CPU only, no CUDA.
+#
+# This is the "try it on a laptop" profile. It keeps the product's real
+# decision (task: translate — any spoken language comes out as an English
+# note, no language picker) but drops to a small model, because large-v3 on
+# CPU is far too slow to feel like a demo.
+#
+# The production profile is asr.yaml: large-v3, device: cuda, float16. Its
+# comments carry the measured language-detection results and are worth reading.
+
+engine: faster-whisper
+model_id: small               # large-v3 in production; small is CPU-feasible
+revision: null
+device: cpu
+compute_type: int8
+
+params:
+  beam_size: 5
+  best_of: 5
+  temperature: 0.0
+  vad_filter: true
+  vad_threshold: 0.5
+  language: null              # auto-detect; translate then outputs English
+  language_detection_segments: 8
+  language_detection_threshold: 0.7
+  task: translate             # product default — English notes from any input language
+  condition_on_previous_text: false
+  initial_prompt: null        # deliberately null; see asr.yaml for why
+
+streaming:
+  window_seconds: 5
+  hop_seconds: 1
+  max_buffer_seconds: 30
+
+vad:
+  engine: silero
+  threshold: 0.5
+  min_speech_ms: 250
+  min_silence_ms: 500

@@ -1,0 +1,60 @@
+{# sum_v1 — extraction-only mode. The model invents differentials/advice
+   from its training distribution; force it to extract verbatim facts.
+   Every section is CAPPED: an uncapped list free-runs on a 20-30 min consult
+   (measured: the same transcript produced 61, 192 and 308 bullets across runs,
+   and once looped one bullet until it ran out of tokens). Caps make the output
+   length stable and leave room for A:/P: to be reached. #}
+TASK: Extract a SOAP note from the transcript below. You are an EXTRACTOR, not a clinician.
+
+ABSOLUTE RULES:
+- Output ONLY facts present in the transcript. If a fact is not there, omit it.
+- DO NOT write differential diagnoses unless the doctor explicitly said one.
+- DO NOT write phrases like "advised to", "monitor for", "return if", "differential could include", "less likely", "due to", "considering" — unless the doctor said those words.
+- DO NOT explain, justify, or add rationale. No "because", no "given that".
+- DO NOT add patient education, safety nets, or recommendations the doctor didn't state.
+- If a SOAP section has nothing in the transcript, write only: "Not documented."
+
+THERE IS EXACTLY ONE PATIENT in this consultation. Never write "another patient" or
+invent a second person. If two doses or two medicines are mentioned, they belong to
+the same patient.
+
+NEVER WRITE A BULLET FOR:
+- Prices, payment, discounts, packages, or what anything costs.
+- Appointment booking, staff names, phone calls, or who will contact whom.
+- Greetings, small talk, or chatter unrelated to this patient's problem.
+- The doctor explaining in general how a treatment or the body works.
+- A fact the transcript states more than once — write it ONCE.
+- The fact that someone asked a question. If the answer to it contains a clinical
+  fact, record that fact instead — never a bullet that only says a question was asked.
+
+FORMAT (exact — all four sections, in this order, every time):
+S:
+- <one short point per patient-stated symptom/history item>   [AT MOST 12 BULLETS]
+O:
+- <one short point per doctor-stated finding/vital/investigation>   [AT MOST 12 BULLETS]
+A:
+- <doctor-stated diagnosis only, one per line; "Not documented." if none>   [AT MOST 6 BULLETS]
+P:
+- <doctor-stated medication/injection/procedure/referral/follow-up, one per line; verbatim doses>   [AT MOST 10 BULLETS]
+
+O: IS NOT A TRANSCRIPT OF WHAT THE DOCTOR SAID. Put a bullet in O: only if the doctor
+measured it, examined it, ordered it, or read it off a report. A doctor explaining,
+reassuring, or recommending a product is NOT an Objective finding — leave it out.
+- Anything the PATIENT reported belongs in S:, never in O:, even if the doctor repeated it back.
+- A medicine, treatment, or referral belongs in P:, never in O:.
+
+P: MUST BE COMPLETE. List EVERY medication, injection, procedure, referral and follow-up
+the doctor stated, including ones mentioned only once or in passing. A missing treatment
+is the worst error this note can make — an extra bullet is cheap, a dropped drug is not.
+
+STYLE:
+- Point form only. Each point on its own line, starting with "- ".
+- Keep every point short and telegraphic — no full sentences, no filler words.
+- One fact per point. Do not merge multiple facts into one line.
+- Obey every cap. If a section has more material than its cap, keep the most clinically important points and drop the rest.
+- Never write the same bullet twice.
+- If a section has nothing in the transcript, write only: "Not documented."
+- No markdown headers, no asterisks, no numbering. Use "- " bullets only.
+
+Transcript:
+{{ transcript }}

@@ -1,0 +1,51 @@
+# Note-generation LLM registry — read at server boot.
+# Swap engine/model here + edit start-llm.sh knobs, restart server, no code change.
+# Schema validated by server/src/medicscribe_server/llm_client/registry.py.
+
+engine: vllm                  # BF16 safetensors served by vLLM (TP=4)
+model_id: Qwen/Qwen3.8-27B
+model_dir: null                 # optional local weights dir; null = let the server resolve model_id
+revision: null
+
+# vLLM (start-llm.sh execs `vllm serve` from $VLLM_VENV) on port 8000, no auth.
+endpoint: http://localhost:8000/v1
+api_key: null                 # standalone vLLM started with no --api-key
+timeout_seconds: 90
+
+# vLLM launch knobs — start-llm.sh greps these.
+serve:
+  gpus: "0,1,2,3"           # BF16 52GB does not fit a 2x24GB pair; TP fans over all four
+  tensor_parallel: 4          # PP=2 is broken for this arch
+  max_model_len: 16384        # full 262K ctx OOMs on 2×24GB; cap to a consult-sized window
+  gpu_memory_utilization: 0.75  # leaves ~6GB on GPU 1 for whisper ASR
+  enforce_eager: true         # skip cudagraph capture — its memory spike OOMs the 24GB card.
+                              # Negligible latency cost at single-clinic concurrency; set false
+                              # only if you free up VRAM (smaller max_model_len / lower util).
+
+# Qwen emits raw text (S: ... O: ... A: ... P: ...) — thinking disabled client-side
+# (openai_compat.py sends enable_thinking=False). Wrap raw as {soap_text: <raw>}.
+response_text_field: soap_text
+
+params:
+  # sum_v1 caps every section, so a 30-min consult lands at ~320 output tokens.
+  # 1536 is ~4x that: headroom for a dense consult, and a hard stop if the model
+  # ever free-runs again (it did at 1024 and 3072 with the old uncapped prompt).
+  max_tokens: 1536
+  temperature: 0.0            # greedy: minimize creative invention
+  top_p: 1.0
+  repetition_penalty: 1.05    # greedy + no penalty degenerates on long noisy transcripts:
+                              # a 22-min code-switched consult looped one bullet forever and
+                              # never reached O:/A:/P:. Forwarded by openai_compat.py only
+                              # when set here. 1.05 is low enough not to distort dosages.
+
+# Guided JSON off; strict-extraction prompt handles structure.
+guided_decoding:
+  enabled: false
+  backend: null
+
+# Optional fallback model — used if the primary returns an empty / invalid response.
+fallback:
+  enabled: false
+  engine: vllm
+  model_id: Qwen/Qwen2.5-14B-Instruct-AWQ
+  endpoint: http://localhost:8001/v1

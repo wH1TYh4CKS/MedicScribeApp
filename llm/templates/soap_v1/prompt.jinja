@@ -1,0 +1,40 @@
+{# SOAP v1 prompt — Malaysian GP code-switched transcripts.
+   Renders with: system_prompt, style_guide, few_shot, transcript, output_schema_json. #}
+
+{{ system_prompt }}
+
+# Style guide
+
+{{ style_guide }}
+
+# Output contract
+
+You MUST emit a single JSON object that conforms to this JSON Schema:
+
+```json
+{{ output_schema_json }}
+```
+
+Do not emit prose, markdown, code fences, or any text before/after the JSON.
+Use the original language for direct patient quotes. Use English for clinical fields
+(assessment, plan, medications) so they are EMR-portable.
+
+# Examples
+
+{% for ex in few_shot %}
+## Example {{ loop.index }}
+
+Transcript:
+{{ ex.transcript }}
+
+Note (JSON):
+{{ ex.note_json }}
+
+{% endfor %}
+
+# Now generate the note for this consultation
+
+Transcript:
+{{ transcript }}
+
+Note (JSON):

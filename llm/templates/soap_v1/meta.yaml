@@ -1,0 +1,24 @@
+name: SOAP v1
+slug: soap_v1
+version: 1.0.0
+description: >
+  Standard medical SOAP note (Subjective / Objective / Assessment / Plan)
+  for Malaysian GP consultations. Handles code-switched English / Mandarin /
+  Bahasa Melayu / Tamil transcripts.
+language_hints:
+  - en
+  - zh
+  - ms
+  - ta
+fields:
+  - chief_complaint
+  - subjective
+  - objective
+  - assessment
+  - plan
+  - medications
+  - allergies
+  - follow_up
+status: active
+introduced_in: 1.0.0
+deprecated_in: null

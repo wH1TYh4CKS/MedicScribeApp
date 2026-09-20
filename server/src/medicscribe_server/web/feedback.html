@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedicScribe — Feedback</title>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1417" media="(prefers-color-scheme: dark)">
+  <link rel="preload" href="/static/scribe/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/scribe/style.css?v=__ASSET_V__">
+  <!-- Same pre-paint theme restore as the scribe page, so a chosen theme
+       carries across the two pages without a flash. -->
+  <script>
+    try {
+      var t = localStorage.getItem('ms-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+  <style>
+    /* Feedback form — reuses the design tokens from style.css (:root vars).
+       Local-only overrides live in .fb-* so the shared sheet is untouched. */
+
+    /* The accent tokens already pair --accent-fill with --on-accent at a safe
+       ratio in both themes, so the button just borrows them. */
+    .fb-wrap { --fb-btn: var(--accent-fill); --fb-btn-hover: var(--accent); }
+
+    .fb-wrap { max-width: 620px; margin: 0 auto; padding: 5vh 20px 12vh; }
+
+    /* Identity: the same lockup as the scribe page, so this reads as MedicScribe
+       and not as some other product. .head/.brand come from style.css. */
+    .fb-head { margin-bottom: clamp(18px, 4vw, 28px); }
+    .fb-head a { color: inherit; text-decoration: none; display: inline-block; }
+    .fb-head a:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; border-radius: 8px; }
+
+    .fb-title { font-weight: 600; font-size: clamp(24px, 4.5vw, 30px); letter-spacing: -.3px; margin: .2em 0 .15em; }
+    .fb-sub { color: var(--fg-soft); margin: 0 0 1.6em; }
+
+    /* PDPA safeguard — kept above the form, given an accent rule so it stays the
+       loudest thing on the page even now that the sections are also cards. */
+    .fb-note {
+      background: var(--surface); border: 1px solid var(--line);
+      border-left: 3px solid var(--accent-deep);
+      border-radius: var(--radius); padding: 14px 16px; color: var(--fg-soft);
+      font-size: .92em; margin-bottom: 1.8em;
+    }
+    .fb-note strong { color: var(--fg); }
+
+    form.fb { display: grid; gap: 1.15em; }
+
+    /* One card = one small cluster of decisions (never more than a couple), so
+       the form is read in passes instead of all at once. */
+    .fb-sec {
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--surface); margin: 0; padding: 4px 18px 18px;
+      display: grid; gap: 1.05em;
+    }
+    .fb-sec > legend {
+      font-weight: 600; font-size: 1em; color: var(--fg);
+      padding: 0 8px; margin-left: -8px;
+    }
+    .fb-sec .sec-lede { color: var(--muted); font-size: .88em; margin: -.5em 0 0; }
+
+    .fb-field { display: grid; gap: .45em; }
+    .fb-field > label, .fb-field > .fb-label { color: var(--fg-soft); font-weight: 600; font-size: .95em; }
+    .fb-field .hint { color: var(--muted); font-size: .85em; font-weight: 400; }
+
+    input[type="text"], input[type="email"], select, textarea {
+      width: 100%; background: var(--bg-1); color: var(--fg);
+      border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px;
+      font: inherit; font-size: .98em; outline: none; transition: border-color .15s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent-deep); }
+    input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 1px;
+    }
+    textarea { resize: vertical; min-height: 84px; }
+
+    /* Rating + pricing: ARIA radiogroups, one tab stop each, arrow keys inside. */
+    .fb-stars { display: flex; gap: 8px; }
+    .fb-stars [role="radio"] {
+      /* A span is inline, so the digit sat in the top-left corner of the box —
+         the button element these replaced centred its label for free. */
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--bg-1); border: 1px solid var(--line); color: var(--muted);
+      width: 46px; height: 46px; border-radius: 12px; font: inherit; font-size: 1.2em;
+      cursor: pointer; transition: background .12s, border-color .12s, color .12s;
+    }
+    .fb-stars [role="radio"].on { background: var(--accent-deep); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+    .fb-scale { display: flex; justify-content: space-between; max-width: 262px; color: var(--muted); font-size: .8em; }
+
+    .fb-choice { display: flex; flex-wrap: wrap; gap: 8px; }
+    .fb-choice [role="radio"] {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--bg-1); border: 1px solid var(--line); color: var(--fg-soft);
+      border-radius: 12px; padding: 10px 14px; font: inherit; font-size: .95em;
+      cursor: pointer; transition: background .12s, border-color .12s, color .12s;
+    }
+    .fb-choice [role="radio"][aria-checked="true"] {
+      background: var(--accent-deep); border-color: var(--accent); color: var(--on-accent); font-weight: 700;
+    }
+    .fb-stars [role="radio"]:focus-visible, .fb-choice [role="radio"]:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px;
+    }
+
+    .fb-check { display: flex; gap: 10px; align-items: flex-start; }
+    .fb-check input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--fb-btn); flex: 0 0 auto; }
+    .fb-check label { color: var(--fg-soft); font-weight: 600; font-size: .95em; }
+    .fb-check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Arriving from the "put this in your clinic" card on the scribe page. */
+    .fb-clinic { display: grid; gap: 1.15em; scroll-margin-top: 16px; }
+    .fb-clinic:target > .fb-sec { border-color: var(--accent-deep); }
+
+    .fb-submit {
+      background: var(--fb-btn); color: var(--on-accent); border: 0; border-radius: 12px;
+      padding: 14px 20px; font: inherit; font-weight: 700; font-size: 1em;
+      cursor: pointer; transition: background .15s; justify-self: start;
+    }
+    .fb-submit:hover { background: var(--fb-btn-hover); filter: brightness(1.08); }
+    .fb-submit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .fb-submit:disabled { opacity: .55; cursor: default; }
+
+    .fb-status { min-height: 1.4em; color: var(--fg-soft); font-size: .92em; }
+    .fb-status.err { color: var(--danger); }
+
+    .fb-thanks { display: none; text-align: center; padding: 3em 1em; }
+    .fb-thanks h2 { font-weight: 600; font-size: 1.6em; margin: .2em 0; }
+    .fb-thanks p { color: var(--fg-soft); }
+    .fb-thanks a { color: var(--accent); }
+
+    .fb-foot { margin-top: 2.5em; color: var(--muted); font-size: .85em; text-align: center; }
+    .fb-foot a { color: var(--accent-2); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fb-stars [role="radio"], .fb-choice [role="radio"], .fb-submit,
+      input, select, textarea { transition: none; }
+    }
+
+    /* Balanced scaling: wider column + bigger type on tablet / desktop. */
+    @media (min-width: 700px)  { .fb-wrap { max-width: 680px; } }
+    @media (min-width: 1100px) {
+      body { font-size: 18px; }
+      .fb-wrap { max-width: 720px; padding-top: 7vh; }
+      .fb-title { font-size: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="fb-wrap">
+    <header class="head fb-head">
+      <a href="/">
+        <h1>Medic<span>Scribe</span></h1>
+        <p class="brand">Sunkari&nbsp;Labs</p>
+      </a>
+    </header>
+
+    <h2 class="fb-title">How did MedicScribe do?</h2>
+    <p class="fb-sub">One minute, your honest take. It tells us what to build next — and whether MedicScribe is right for your clinic.</p>
+
+    <div class="fb-note">
+      <strong>Please don't paste patient details.</strong> This form is product feedback
+      only. Keep any examples generic (no names, no real consult notes).
+    </div>
+
+    <form class="fb" id="fbForm" novalidate>
+
+      <fieldset class="fb-sec">
+        <legend>How it went</legend>
+
+        <div class="fb-field">
+          <span class="fb-label" id="ratingLabel">Overall, how useful was it?</span>
+          <div class="fb-stars" id="stars" role="radiogroup" aria-labelledby="ratingLabel" data-fill="cumulative">
+            <span role="radio" tabindex="0" aria-checked="false" data-v="1" aria-label="1 — not useful">1</span>
+            <span role="radio" tabindex="-1" aria-checked="false" data-v="2" aria-label="2">2</span>
+            <span role="radio" tabindex="-1" aria-checked="false" data-v="3" aria-label="3">3</span>
+            <span role="radio" tabindex="-1" aria-checked="false" data-v="4" aria-label="4">4</span>
+            <span role="radio" tabindex="-1" aria-checked="false" data-v="5" aria-label="5 — very useful">5</span>
+          </div>
+          <div class="fb-scale" aria-hidden="true"><span>Not useful</span><span>Very useful</span></div>
+        </div>
+
+        <div class="fb-field">
+          <label for="role">Your role</label>
+          <select id="role">
+            <option value="">— select —</option>
+            <option>Doctor / GP</option>
+            <option>Specialist</option>
+            <option>Nurse</option>
+            <option>Clinic admin / Manager</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset class="fb-sec">
+        <legend>In your words</legend>
+
+        <div class="fb-field">
+          <label for="liked">What worked well? <span class="hint">the good parts</span></label>
+          <textarea id="liked" placeholder="e.g. the note was ready before I finished typing…"></textarea>
+        </div>
+
+        <div class="fb-field">
+          <label for="issues">What issues did you face? <span class="hint">be brutal — this helps most</span></label>
+          <textarea id="issues" placeholder="e.g. it mixed up two medications, the mic was slow to start…"></textarea>
+        </div>
+      </fieldset>
+
+      <!-- Bottom of the funnel: the scribe page's offer card links to /feedback#clinic. -->
+      <div class="fb-clinic" id="clinic">
+        <fieldset class="fb-sec">
+          <legend>A box in your clinic</legend>
+          <p class="sec-lede">We install and run a MedicScribe server inside your clinic — the
+            hardware, the setup, the updates and the support are ours to handle. Your consults
+            never leave the building. Tick below and a person here reads it, usually same working day.</p>
+
+          <div class="fb-check">
+            <input type="checkbox" id="wantsBox">
+            <label for="wantsBox">Yes — I'd like to talk about putting a box in my clinic</label>
+          </div>
+
+          <div class="fb-field">
+            <label for="contact">Email or phone <span class="hint">so we can follow up with you</span></label>
+            <input type="text" id="contact" autocomplete="email" placeholder="you@clinic.com">
+          </div>
+        </fieldset>
+
+        <fieldset class="fb-sec">
+          <legend>What that's worth</legend>
+
+          <div class="fb-field">
+            <span class="fb-label" id="payLabel">For a clinic like yours, what would a fully managed
+              service like this be worth per month?</span>
+            <span class="hint">Everything included — server, setup, updates, support. Nearest band is fine.</span>
+            <div class="fb-choice" id="pay" role="radiogroup" aria-labelledby="payLabel">
+              <span role="radio" tabindex="0" aria-checked="false" data-v="Under RM2000/month">Under RM2,000</span>
+              <span role="radio" tabindex="-1" aria-checked="false" data-v="RM2000-3500/month">RM2,000 – 3,500</span>
+              <span role="radio" tabindex="-1" aria-checked="false" data-v="RM3500-5000/month">RM3,500 – 5,000</span>
+              <span role="radio" tabindex="-1" aria-checked="false" data-v="Over RM5000/month">Over RM5,000</span>
+              <span role="radio" tabindex="-1" aria-checked="false" data-v="Not sure yet">Not sure yet</span>
+            </div>
+          </div>
+
+          <div class="fb-field">
+            <label for="payNote">Anything behind that number? <span class="hint">optional</span></label>
+            <input type="text" id="payNote" placeholder="e.g. depends on how many rooms it covers">
+          </div>
+        </fieldset>
+      </div>
+
+      <button type="submit" class="fb-submit" id="submitBtn">Send feedback</button>
+      <div class="fb-status" id="status" role="status"></div>
+    </form>
+
+    <div class="fb-thanks" id="thanks">
+      <h2>Thank you 🙏</h2>
+      <p id="thanksMsg">Your feedback is in. It genuinely shapes what we build next.</p>
+      <p><a href="/">← Back to MedicScribe</a></p>
+    </div>
+
+    <div class="fb-foot">
+      MedicScribe runs locally — your audio is deleted the moment you stop recording.
+      <br>MedicScribe
+    </div>
+  </div>
+
+  <script src="/static/scribe/feedback.js?v=__ASSET_V__"></script>
+</body>
+</html>
