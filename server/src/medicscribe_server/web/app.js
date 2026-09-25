@@ -81,8 +81,8 @@ async function pollHealth() {
     const r = await fetch('/health/ready', { cache: 'no-store' });
     const d = await r.json();
     if (d.ready) setSystemStatus(true, 'System online');
-    else if (d.asr && !d.note_llm) setSystemStatus(false, 'Starting up — note engine offline');
-    else if (!d.asr) setSystemStatus(false, 'Starting up — transcriber offline');
+    else if (d.asr && !d.note_llm) setSystemStatus(false, 'Starting up: note engine offline');
+    else if (!d.asr) setSystemStatus(false, 'Starting up: transcriber offline');
     else setSystemStatus(false, 'System unavailable');
   } catch {
     setSystemStatus(false, 'Server unreachable');
@@ -106,7 +106,7 @@ function showError(msg) {
   els.skeleton.hidden = true;
   // The status line sits under the button — where the user is already looking.
   // Blanking it made that spot go empty; point at the message instead.
-  setStatus('Something went wrong — details below.');
+  setStatus('Something went wrong. Details below.');
   renderErrorBox(msg);
   stopTimer();
   refreshButton();
@@ -169,7 +169,7 @@ function startTimer() {
 function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
 
 async function startRecording() {
-  if (!backendReady) { showError('System is starting up — please wait a moment and try again.'); return; }
+  if (!backendReady) { showError('The system is starting up. Please wait a moment and try again.'); return; }
   clearError();
   els.noteCard.hidden = true;
   els.skeleton.hidden = true;
@@ -223,7 +223,7 @@ async function startRecording() {
     startViz(); // live level meter so the client sees the mic is picking up audio
 
     state = 'recording';
-    setStatus('Recording. You can switch tabs — it keeps going.');
+    setStatus('Recording. You can switch tabs and it keeps going.');
     lastChunkAt = Date.now();
     startTimer();
     startWatchdog();
@@ -266,8 +266,8 @@ function handleServerMessage(raw) {
 function serverErrorText(msg) {
   if (msg.code === 'NOTE_FAILED') return 'Note generation failed. Please try again.';
   if (msg.code === 'ASR_FAILED') return 'Transcription failed. Please try again.';
-  if (msg.code === 'NO_SPEECH') return 'No speech detected — speak clearly and try again.';
-  if (msg.code === 'BUSY') return 'System is busy with other consultations — please try again shortly.';
+  if (msg.code === 'NO_SPEECH') return 'No speech detected. Please speak clearly and try again.';
+  if (msg.code === 'BUSY') return 'The system is busy with other consultations. Please try again shortly.';
   if (msg.code === 'LIMIT_EXCEEDED') return 'Recording too long. Please keep consults under the limit and try again.';
   // A whole clinic shares one NAT'd IP and the per-IP cap is 2, so the third
   // person to press Record lands here — the raw server string ("too many active
@@ -533,10 +533,10 @@ function startWatchdog() {
     if (document.visibilityState !== 'visible') return;
     if (Date.now() - visibleSince < RESUME_GRACE_MS) return;
     if (!socketIsOpen()) {
-      showError('Connection lost. Nothing was saved — please record again.');
+      showError('Connection lost. Nothing was saved, so please record again.');
     } else if (!audioIsFlowing()) {
-      showError('The microphone stopped sending audio — the device may have slept, ' +
-        'or another app took the mic. Nothing was saved — please record again.');
+      showError('The microphone stopped sending audio. The device may have gone to sleep, ' +
+        'or another app took the mic. Nothing was saved, so please record again.');
     }
   }, 2000);
 }
@@ -553,7 +553,7 @@ async function onPageVisible() {
   }
   if (!socketIsOpen()) {
     showError(state === 'recording'
-      ? 'The connection dropped while this page was in the background. Nothing was saved — please record again.'
+      ? 'The connection dropped while this page was in the background. Nothing was saved, so please record again.'
       : 'The connection dropped while the note was being written. Please record again.');
   }
 }
@@ -579,9 +579,9 @@ function onPageHide() {
 // A doctor who parked this tab beside their notes reads the title, not the
 // page. Keep the state and the running time in it, and colour the favicon.
 function setPageTitle() {
-  if (state === 'recording') document.title = `● ${els.timer.textContent} · Recording — MedicScribe`;
-  else if (state === 'generating') document.title = 'Writing note… — MedicScribe';
-  else if (state === 'done') document.title = 'Note ready — MedicScribe';
+  if (state === 'recording') document.title = `● ${els.timer.textContent} · Recording · MedicScribe`;
+  else if (state === 'generating') document.title = 'Writing note… · MedicScribe';
+  else if (state === 'done') document.title = 'Note ready · MedicScribe';
   else document.title = 'MedicScribe';
 }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MedicScribe — Feedback</title>
+  <title>MedicScribe Feedback</title>
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b1417" media="(prefers-color-scheme: dark)">
   <link rel="preload" href="/static/scribe/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -155,7 +155,7 @@
     </header>
 
     <h2 class="fb-title">How did MedicScribe do?</h2>
-    <p class="fb-sub">One minute, your honest take. It tells us what to build next — and whether MedicScribe is right for your clinic.</p>
+    <p class="fb-sub">One minute, your honest take. It tells us what to build next and whether MedicScribe is right for your clinic.</p>
 
     <div class="fb-note">
       <strong>Please don't paste patient details.</strong> This form is product feedback
@@ -170,11 +170,11 @@
         <div class="fb-field">
           <span class="fb-label" id="ratingLabel">Overall, how useful was it?</span>
           <div class="fb-stars" id="stars" role="radiogroup" aria-labelledby="ratingLabel" data-fill="cumulative">
-            <span role="radio" tabindex="0" aria-checked="false" data-v="1" aria-label="1 — not useful">1</span>
+            <span role="radio" tabindex="0" aria-checked="false" data-v="1" aria-label="1, not useful">1</span>
             <span role="radio" tabindex="-1" aria-checked="false" data-v="2" aria-label="2">2</span>
             <span role="radio" tabindex="-1" aria-checked="false" data-v="3" aria-label="3">3</span>
             <span role="radio" tabindex="-1" aria-checked="false" data-v="4" aria-label="4">4</span>
-            <span role="radio" tabindex="-1" aria-checked="false" data-v="5" aria-label="5 — very useful">5</span>
+            <span role="radio" tabindex="-1" aria-checked="false" data-v="5" aria-label="5, very useful">5</span>
           </div>
           <div class="fb-scale" aria-hidden="true"><span>Not useful</span><span>Very useful</span></div>
         </div>
@@ -182,7 +182,7 @@
         <div class="fb-field">
           <label for="role">Your role</label>
           <select id="role">
-            <option value="">— select —</option>
+            <option value="">Select one</option>
             <option>Doctor / GP</option>
             <option>Specialist</option>
             <option>Nurse</option>
@@ -201,7 +201,7 @@
         </div>
 
         <div class="fb-field">
-          <label for="issues">What issues did you face? <span class="hint">be brutal — this helps most</span></label>
+          <label for="issues">What issues did you face? <span class="hint">be brutal, this helps most</span></label>
           <textarea id="issues" placeholder="e.g. it mixed up two medications, the mic was slow to start…"></textarea>
         </div>
       </fieldset>
@@ -210,13 +210,13 @@
       <div class="fb-clinic" id="clinic">
         <fieldset class="fb-sec">
           <legend>A box in your clinic</legend>
-          <p class="sec-lede">We install and run a MedicScribe server inside your clinic — the
-            hardware, the setup, the updates and the support are ours to handle. Your consults
+          <p class="sec-lede">We install and run a MedicScribe server inside your clinic. The
+            hardware, setup, updates and support are all handled by us. Your consults
             never leave the building. Tick below and a person here reads it, usually same working day.</p>
 
           <div class="fb-check">
             <input type="checkbox" id="wantsBox">
-            <label for="wantsBox">Yes — I'd like to talk about putting a box in my clinic</label>
+            <label for="wantsBox">Yes, I'd like to talk about putting a box in my clinic</label>
           </div>
 
           <div class="fb-field">
@@ -231,11 +231,11 @@
           <div class="fb-field">
             <span class="fb-label" id="payLabel">For a clinic like yours, what would a fully managed
               service like this be worth per month?</span>
-            <span class="hint">Everything included — server, setup, updates, support. Nearest band is fine.</span>
+            <span class="hint">Everything included: server, setup, updates and support. Nearest band is fine.</span>
             <div class="fb-choice" id="pay" role="radiogroup" aria-labelledby="payLabel">
               <span role="radio" tabindex="0" aria-checked="false" data-v="Under RM2000/month">Under RM2,000</span>
-              <span role="radio" tabindex="-1" aria-checked="false" data-v="RM2000-3500/month">RM2,000 – 3,500</span>
-              <span role="radio" tabindex="-1" aria-checked="false" data-v="RM3500-5000/month">RM3,500 – 5,000</span>
+              <span role="radio" tabindex="-1" aria-checked="false" data-v="RM2000-3500/month">RM2,000 to 3,500</span>
+              <span role="radio" tabindex="-1" aria-checked="false" data-v="RM3500-5000/month">RM3,500 to 5,000</span>
               <span role="radio" tabindex="-1" aria-checked="false" data-v="Over RM5000/month">Over RM5,000</span>
               <span role="radio" tabindex="-1" aria-checked="false" data-v="Not sure yet">Not sure yet</span>
             </div>
@@ -259,7 +259,7 @@
     </div>
 
     <div class="fb-foot">
-      MedicScribe runs locally — your audio is deleted the moment you stop recording.
+      MedicScribe runs locally. Your audio is deleted the moment you stop recording.
       <br>MedicScribe
     </div>
   </div>

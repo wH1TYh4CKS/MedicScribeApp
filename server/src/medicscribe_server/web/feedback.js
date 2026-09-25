@@ -160,7 +160,7 @@
   function showThanks() {
     if (wantsBox.checked) {
       thanksMsg.textContent =
-        "Your feedback is in — and we'll be in touch about a box for your clinic, " +
+        "Your feedback is in, and we'll be in touch about a box for your clinic, " +
         "usually within a working day.";
     }
     form.style.display = "none";
@@ -184,7 +184,7 @@
       showThanks();
     } catch (err) {
       submitBtn.disabled = false;
-      setStatus("Couldn't send — check your connection and try again.", true);
+      setStatus("Couldn't send. Check your connection and try again.", true);
     }
   });
 
